@@ -13,8 +13,8 @@ def sigmoid(value: array):
 
 def forward(arr1:array, arr2:array, bias:float):
 
-	print("[ARR1]\n", arr1)
-	print("[ARR2]\n", arr2)
+	# print("[ARR1]\n", arr1)
+	# print("[ARR2]\n", arr2)
 
 	res = arr1 @ arr2 + bias
 	activ = sigmoid(res)
@@ -44,44 +44,94 @@ def network(net: tuple):
 	return netWeight
 
 
+# def main():
+# 	#-----------------------------init-----------------------------
+# 	inputs = [np.array([0.4, 0.3, 0.8]), np.array([0.45, 0.21, 0.66]), np.array([0.95, 0.19, 0.16])]
+# 	truths = [np.array([0.28, 0.72]), np.array([0.58, 0.62]), np.array([0.18, 0.42])]
+# 	# nets = network((3, 5, 5, 5, 2))
+# 	nets = network((3, 4, 4, 2))
+
+# 	#-----------------------------forward-----------------------------
+# 	active_neurons = []
+# 	for input in inputs:
+# 		activ = input
+# 		actives_in_one = [activ]
+# 		for i in range(len(nets)):
+# 			print(activ)
+# 			print(nets[i])
+# 			activ = forward(activ, nets[i], 0.5)
+# 			actives_in_one.append(activ)
+# 			print("\033[33m[RES]", activ, "\033[0m")
+
+# 		active_neurons.append(actives_in_one)
+
+# 		print("----------------------------------------------")
+	
+# 	#-----------------------------backward-----------------------------
+# 	print("-------------------------------[FORWARD DONE]-----------------------------------------")
+
+# 	i_data = 0
+# 	len_weight = len(nets)
+# 	for i in len_weight:
+# 		idx = len_weight - i - 1
+# 		diff_arr = truths[i_data] - active_neurons[i_data][idx + 1]
+# 		trans_net = nets[idx].copy()
+# 		np.transpose(trans_net)
+# 		loss_prev_layer = diff_arr @ trans_net
+# 		sigmoid_derivative = 
+
+
 def main():
 	#-----------------------------init-----------------------------
-	inputs = [np.array([0.4, 0.3, 0.8]), np.array([0.45, 0.21, 0.66]), np.array([0.95, 0.19, 0.16])]
-	truths = [np.array([0.28, 0.72]), np.array([0.58, 0.62]), np.array([0.18, 0.42])]
-	# nets = network((3, 5, 5, 5, 2))
+	inputs = np.array([0.4, 0.3, 0.8])
+	truths = np.array([0.28, 0.72])
 	nets = network((3, 4, 4, 2))
 
-	#-----------------------------forward-----------------------------
-	active_neurons = []
-	for input in inputs:
-		activ = input
-		actives_in_one = [activ]
+
+	for epoch in range(1000):
+		activ = inputs
+		actives = [activ]
 		for i in range(len(nets)):
-			print(activ)
-			print(nets[i])
 			activ = forward(activ, nets[i], 0.5)
-			actives_in_one.append(activ)
-			print("\033[33m[RES]", activ, "\033[0m")
+			actives.append(activ)
+		
+		# -----------------------------forward end-----------------------------
+		
+		grads = []
+		len_weight = len(nets)
+		len_out = len(truths)
+		diff_arr = (truths - actives[-1])
+		print("[DIFF ARR]:", diff_arr, "[LAST ACTIVATION]", actives[-1])
+		Tdiff_arr = diff_arr.copy().reshape((len_out, 1))
+		Tactive = actives[-2].copy()
+		Tactive = np.transpose(Tactive).reshape((1, len(Tactive)))
+		grad = Tdiff_arr @ Tactive
+		grads.append(grad)
+		# print(grad)
+		for i in range(len_weight):
+			idx = len_weight - i - 1
+			if idx < 1:
+				break
+			trans_net = nets[idx].copy()
+			trans_net = np.transpose(trans_net)
+			loss_prev_layer = diff_arr @ trans_net
+			activ_func_derivative = actives[idx] * (1 - actives[idx])
+			
+			diff_arr = loss_prev_layer * activ_func_derivative
+			Tdiff_arr = diff_arr.copy().reshape((len(diff_arr), 1))
+			Tactive = actives[idx - 1].copy()
+			Tactive = np.transpose(Tactive).reshape((1, len(Tactive)))
+			grad = Tdiff_arr @ Tactive
+			grads.append(grad)
+		# -----------------------------back probab end-----------------------------
 
-		active_neurons.append(actives_in_one)
+		for i, net in enumerate(nets):
+			nets[i] = nets[i] - np.transpose(grads[len_weight - i - 1])
+		# -----------------------------gradient descent end-----------------------------
 
-		print("----------------------------------------------")
-	
-	#-----------------------------backward-----------------------------
-	print("-------------------------------[FORWARD DONE]-----------------------------------------")
-	for i in range(len(active_neurons)): #for number of training data
-		print("[INPUT DATA]--------------------------------------------------", i)
-		diff_arr = truths[i] - active_neurons[i][-1]
-		# print(diff_arr)
-		for j in range(len(nets)): #for layer of net
-			idx = len(nets) - j - 1
-			# print(nets[idx])
-			if j == len(nets) - 1:
-				print(diff_arr)
-				# print(nets[j])
-				# err_weights = np.copy(diff_arr).reshape(-1, 1) * nets[j]
-				err_weights = np.copy(diff_arr) * nets[j] 
-				print(err_weights)
+		
+
+
 
 
 if __name__ == "__main__":
