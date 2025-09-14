@@ -1,14 +1,13 @@
 import numpy as np
-from numpy import ndarray as array
 from utils.activation_func import relu, relu_deriv, sigmoid, sigmoid_deriv, activ_deriv
-from utils.nn import forward_layer,  network, loss, mse_loss, create_bias, gradient_descent, mean_gradients
+from utils.nnUtils import forward_layer, network, loss, mse_loss, create_bias, gradient_descent, mean_gradients
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 
 
-class Mlp:
-    """Multi layer perceptron class, which can perform training"""
+class NN:
+    """Neural network class, which can perform training and prediction"""
 
     def __init__(self, shape, activation_functions):
         """Init a multi layer perceptron."""
@@ -26,14 +25,16 @@ class Mlp:
         self.len_out = self.net_shape[-1]
         self.biases = create_bias(self.net_shape, 0.1) 
 
-        #-----------------------------------data1-------------------------------
-        #------------------------------------data end---------------------------
         self.graph_loss = []
         self.graph_epoch = []
         self.grads_weights = []
         self.grads_biases = []
         self.plt = plt
-        
+
+        self.deriv_func_map = dict()
+        self.deriv_func_map[relu] = relu_deriv
+        self.deriv_func_map[sigmoid] = sigmoid_deriv
+
 
     def check_train_params(self, inputs, truths):
         """Check training parameters."""
@@ -68,20 +69,20 @@ class Mlp:
                 # -----------------------------back probab --------------------------------
                 Wgrads = []  #collect the output gradient matrixs
                 Bgrads = []
-                diff = (actives[-1] - truths[i_data] ) * activ_deriv(self.activ_funcs[-1], actives[-1]) # last layer difference
+                diff = (actives[-1] - truths[i_data] ) * activ_deriv(self.activ_funcs[-1], actives[-1], self.deriv_func_map) # last layer difference
                 Bgrads.append(diff) #gradient for bias
                 Wgrads.append(diff.reshape(-1, 1) @ actives[-2].reshape(1, -1))  # add gradient for weights to grads
 
                 for i in range(self.len_nets - 1, 0, -1): #exclude index == 0
                     loss_prev_layer = diff @ self.nets[i].T  #cal the loss of prev layer
-                    diff = loss_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i])
+                    diff = loss_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], self.deriv_func_map)
                     Bgrads.append(diff) #gradient for bias
                     Wgrads.append(diff.reshape(-1, 1) @ actives[i - 1].reshape(1, -1))  # add gradient for weights to grads 
                 # -----------------------------back probab end-----------------------------
                 self.grads_weights.append(Wgrads)
                 self.grads_biases.append(Bgrads)
+
             # -----------------------------show -----------------------------
-            
             if epoch % 10 == 0 and loss(mse_loss, truths[i_data], actives[-1]) < 1:
                 self.graph_loss.append(loss(mse_loss, truths[i_data], actives[-1]))
                 self.graph_epoch.append(epoch)
@@ -95,18 +96,8 @@ class Mlp:
         print("[TRAINING DONE]")
 
 
-    # def evaluate_test(self, test_inputs, test_truths):
-    #     test_result =[]
-    #     for test_input in test_inputs:
-    #         res = test_input
-    #         for i in range(len(self.nets)):
-    #             res = forward_layer(res, self.nets[i], self.biases[i], self.activ_funcs[i])
-    #             if i == len(self.nets) - 1:
-    #                 test_result.append(list(res))
-    
-
     def test(self, test_inputs, test_truths):
-        # -----------------------------test--------------------------
+        """Test for a new dataset."""
         test_result =[]
         for test_input in test_inputs:
             res = test_input
@@ -120,6 +111,7 @@ class Mlp:
         self.plt.savefig("visualize/prediction.png", dpi=300, bbox_inches='tight')
         self.plt.close()
         # -----------------------------test end--------------------------
+
 
     def show_loss(self):
         """Show loss func."""

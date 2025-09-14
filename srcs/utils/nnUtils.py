@@ -1,10 +1,10 @@
-from utils.data_generation import generate_data
 from numpy import ndarray as array
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def create_bias(net_shape:tuple, value):
+    """Create bias for given network shape."""
+
     biases = []
     for num in net_shape[1:]:
         biases.append(np.full((num), value, dtype=np.float32))
@@ -12,6 +12,7 @@ def create_bias(net_shape:tuple, value):
 
 
 def forward_layer(arr1:array, arr2:array, biases:array, activ_func):
+    """Perform layer forwarding."""
 
     res = arr1 @ arr2 + biases
     if activ_func is None:
@@ -21,6 +22,8 @@ def forward_layer(arr1:array, arr2:array, biases:array, activ_func):
 
 
 def init_matrix(shapes: tuple, value:float, random=False):
+    """Init matrix in given shapes."""
+
     matrixs = []
     if (len(shapes) < 4):
         raise("Invalid network structure.")
@@ -34,10 +37,14 @@ def init_matrix(shapes: tuple, value:float, random=False):
 
 
 def network(net: tuple):
+    """Init network weights."""
+
     return init_matrix(net, 0.1, True)
 
 
 def mean_gradients(net_structure, Wgrads, Bgrads, num_data):
+    """Calcualte mean gradient for weights and biases."""
+
     len_nets = len(net_structure) - 1
     Wgrads_mean = init_matrix(net_structure, 0.0)
     Bgrads_mean = create_bias(net_structure, 0)
@@ -52,6 +59,8 @@ def mean_gradients(net_structure, Wgrads, Bgrads, num_data):
 
 
 def gradient_descent(nets, biases, Wgrads_mean, Bgrads_mean, learning_rate):
+    """Perform gradient descent for weights and biases."""
+
     len_nets = len(Wgrads_mean)
     for i in range(len_nets):
         nets[i] -= learning_rate * Wgrads_mean[i]
@@ -59,7 +68,12 @@ def gradient_descent(nets, biases, Wgrads_mean, Bgrads_mean, learning_rate):
 
 
 def loss(func, truth, predict):
+    """Calculate loss."""
+
     return func(truth, predict)
 
+
 def mse_loss(truth: array, predict: array):
+    """Calculate mse loss."""
+
     return 0.5 * np.mean((truth - predict) ** 2)
