@@ -1,4 +1,5 @@
 import numpy as np
+# import cupy as np
 from .activation_func import *
 from .nnUtils import *
 import matplotlib.pyplot as plt
@@ -9,7 +10,7 @@ import os
 class NN:
     """Neural network class, which can perform training and prediction"""
 
-    def __init__(self, shape, activation_functions):
+    def __init__(self, shape, activation_functions, classfication=False):
         """Init a multi layer perceptron."""
         
         if len(shape) < 4:
@@ -31,6 +32,8 @@ class NN:
 
         self.graph_loss_train = []
         self.graph_loss_test = []
+        self.graph_acc_train = []
+        self.graph_acc_test = []
         self.graph_epoch = []
 
         self.loss_threshold = 0.000000001
@@ -41,6 +44,8 @@ class NN:
         self.deriv_map = dict()
         self.deriv_map[relu] = relu_deriv
         self.deriv_map[sigmoid] = sigmoid_deriv
+
+        self.classfication = classfication
 
 
     def check_train_params(self, inputs, truths):
@@ -119,7 +124,7 @@ class NN:
         return result
 
 
-    def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=20, visualize=True, test_ratio = 0.8, threshold=None, animation=False):
+    def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=20, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
         """Train a dataset."""
 
         self.check_train_params(inputs, truths)
@@ -176,6 +181,8 @@ class NN:
             self.plt.plot(inputs_sorted, outputs_sorted, c="red", label="Prediction", lw=1)
         elif animation == "scatter":
             self.plt.scatter(inputs_sorted, outputs_sorted, c="red", label="Prediction", s=10)
+        elif animation is None:
+            pass
         else:
             raise TypeError("Wrong animation type")
         self.plt.legend(loc="lower left")
@@ -191,16 +198,32 @@ class NN:
             loss_train = loss(mse_loss, truths_train, predicts_train)
             loss_test = loss(mse_loss, truths_test, predicts_test)
 
+            # if classfication == True:
+            predicts_train = np.array(predicts_train, dtype=np.float32)
+            predicts_test = np.array(predicts_test, dtype=np.float32)
+            predict_train_class = (predicts_train >= 0.5).astype(np.int32)
+            predict_test_class = (predicts_test >= 0.5).astype(np.int32)
+            acc_train = accuracy_1d(truths_train, predict_train_class)
+            acc_test = accuracy_1d(truths_test, predict_test_class)
+
+
             if loss_train < 1 and loss_test < 1:
                 self.graph_loss_train.append(loss_train)
                 self.graph_loss_test.append(loss_test)
             self.graph_epoch.append(epoch)
 
+            if self.classfication == True:
+                self.graph_acc_train.append(acc_train)
+                self.graph_acc_test.append(acc_test)
+
             if animation is not None and epoch % 50 == 0:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
             if epoch % 100 == 0:
                 time = str(datetime.now() - startTime).split(".")[0]
-                print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f}  [TIME] {time}\033[?25l", end="\r")
+                if self.classfication == False:
+                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f}  [TIME] {time}\033[?25l", end="\r")
+                else:
+                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f} [ACC_TRAIN] {acc_train:5f} [ACC_TEST] {acc_test:5f} [TIME] {time}\033[?25l", end="\r")
 
             if self.loss_train  is not None and self.loss_test is not None:
                 if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
@@ -212,14 +235,29 @@ class NN:
         return False
 
 
-    def show_loss(self):
+    def save_plots(self):
         """Show loss func."""
 
-        plt.plot(self.graph_epoch, self.graph_loss_train, c="cyan", lw=0.5, label="Training loss")
-        plt.plot(self.graph_epoch, self.graph_loss_test, c="orange", lw=0.5, label="Test loss")
+        plt.plot(self.graph_epoch, self.graph_loss_train, c="cyan", lw=1, label="Training loss")
+        plt.plot(self.graph_epoch, self.graph_loss_test, c="orange", linestyle="--", lw=1, label="Test loss")
+        plt.grid(True, linestyle="--", linewidth=0.7, alpha=0.7)
+        plt.title("Loss Curves")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
         plt.legend(loc="upper right")
         plt.savefig("visualize/loss.png", dpi=300, bbox_inches='tight')
         plt.close()
+
+        if self.classfication == True:
+            plt.plot(self.graph_epoch, self.graph_acc_train, c="cyan", lw=1, label="Training accuracy")
+            plt.plot(self.graph_epoch, self.graph_acc_test, c="orange", linestyle="--", lw=1, label="Test accuracy")
+            plt.grid(True, linestyle="--", linewidth=0.7, alpha=0.7)
+            plt.title("Learning Curves")
+            plt.xlabel("Epochs")
+            plt.ylabel("Accuracy")
+            plt.legend(loc="lower right")
+            plt.savefig("visualize/accuracy.png", dpi=300, bbox_inches='tight')
+            plt.close()
 
 
     def prepare(self, visualize, threshold):

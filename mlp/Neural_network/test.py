@@ -18,9 +18,10 @@ def test0():
     inputs, truths = generate_data_1d(142, 200, 5)
     test_inputs, test_truths = generate_data_1d(123, 50)
 
-    nn.train(inputs, truths, 40000, 0.01, batch_size=20, animation="plot")
+    # nn.train(inputs, truths, 40000, 0.01, batch_size=20, animation="plot")
+    nn.train(inputs, truths, 40000, 0.01, batch_size=20)
     nn.test(inputs, truths, test_inputs, test_truths)
-    nn.show_loss()
+    nn.save_plots()
 
 
 def test1():
@@ -34,7 +35,7 @@ def test1():
 
     nn.train(inputs, truths, 20000, 0.005, batch_size=50)
     nn.test(inputs, truths, test_inputs, test_truths)
-    nn.show_loss()
+    nn.save_plots()
 
 
 def test2():
@@ -46,9 +47,10 @@ def test2():
     inputs, truths = generate_data_3d(142, 500)
     test_inputs, test_truths = generate_data_3d(123, 80)
 
-    nn.train(inputs, truths, 20000, 0.005, animation="scatter")
+    # nn.train(inputs, truths, 20000, 0.005, animation="scatter")
+    nn.train(inputs, truths, 20000, 0.005)
     nn.test(inputs, truths, test_inputs, test_truths)
-    nn.show_loss()
+    nn.save_plots()
 
 
 def main():

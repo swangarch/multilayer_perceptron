@@ -72,6 +72,15 @@ def mse_loss(truth: array, predict: array):
     return 0.5 * np.mean((truth - predict) ** 2)
 
 
+def accuracy_1d(truth: array, predict: array):
+    """"""
+    truth_flat = truth.reshape(-1)
+    predict_flat = predict.reshape(-1)
+    correct = np.sum(truth_flat == predict_flat)
+    total = truth_flat.shape[0]
+    return correct / total
+
+
 def shuffle_data(inputs, truths):
     """Random shuffle the inputs and outputs data"""
 
@@ -82,7 +91,7 @@ def shuffle_data(inputs, truths):
     return inputs_shuffled, truths_shuffled
 
 
-def split_dataset(inputs, truths, ratio):
+def split_dataset(inputs, truths, ratio=0.8):
     inputs, truths = shuffle_data(inputs, truths) #random shuffle
     num_data = len(inputs)
     inputs_train = inputs[: int(num_data * ratio) - 1]

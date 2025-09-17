@@ -1,7 +1,0 @@
-# flake8
-
-pandas
-
-matplotlib
-
-numpy
