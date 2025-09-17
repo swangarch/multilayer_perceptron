@@ -1,7 +1,6 @@
 from Neural_network import NN, relu, sigmoid, generate_data_1d, generate_data_rand, split_dataset
 from Data_process import load, preprocess_data
 import sys
-import numpy as np
 
 
 def test_regression_noise():
@@ -38,12 +37,12 @@ def classification(inputs, truths):
     net_shape = (30, 64, 32, 1)
     activation_funcs = (relu, relu, sigmoid)
 
-    nn = NN(net_shape, activation_funcs, classfication=True)
+    nn = NN(net_shape, activation_funcs, classification=True)
 
     inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths)
 
     # nn.train(inputs_train, truths_train, 10000, 0.001, batch_size=20, animation="scatter")
-    nn.train(inputs_train, truths_train, 15000, 0.001, batch_size=20)
+    nn.train(inputs_train, truths_train, 20000, 0.001, batch_size=20)
     nn.test(inputs, truths, inputs_test, truths_test)
     nn.save_plots()
 

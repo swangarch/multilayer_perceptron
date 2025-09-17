@@ -10,7 +10,7 @@ import os
 class NN:
     """Neural network class, which can perform training and prediction"""
 
-    def __init__(self, shape, activation_functions, classfication=False):
+    def __init__(self, shape, activation_functions, classification=False):
         """Init a multi layer perceptron."""
         
         if len(shape) < 4:
@@ -45,7 +45,7 @@ class NN:
         self.deriv_map[relu] = relu_deriv
         self.deriv_map[sigmoid] = sigmoid_deriv
 
-        self.classfication = classfication
+        self.classification = classification
 
 
     def check_train_params(self, inputs, truths):
@@ -198,7 +198,7 @@ class NN:
             loss_train = loss(mse_loss, truths_train, predicts_train)
             loss_test = loss(mse_loss, truths_test, predicts_test)
 
-            # if classfication == True:
+            # if classification == True:
             predicts_train = np.array(predicts_train, dtype=np.float32)
             predicts_test = np.array(predicts_test, dtype=np.float32)
             predict_train_class = (predicts_train >= 0.5).astype(np.int32)
@@ -212,7 +212,7 @@ class NN:
                 self.graph_loss_test.append(loss_test)
             self.graph_epoch.append(epoch)
 
-            if self.classfication == True:
+            if self.classification == True:
                 self.graph_acc_train.append(acc_train)
                 self.graph_acc_test.append(acc_test)
 
@@ -220,10 +220,10 @@ class NN:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
             if epoch % 100 == 0:
                 time = str(datetime.now() - startTime).split(".")[0]
-                if self.classfication == False:
-                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f}  [TIME] {time}\033[?25l", end="\r")
+                if self.classification == False:
+                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f}  [TIME] {time}\033[?25h", end="\r")
                 else:
-                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f} [ACC_TRAIN] {acc_train:5f} [ACC_TEST] {acc_test:5f} [TIME] {time}\033[?25l", end="\r")
+                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f} [ACC_TRAIN] {acc_train:5f} [ACC_TEST] {acc_test:5f} [TIME] {time}\033[?25h", end="\r")
 
             if self.loss_train  is not None and self.loss_test is not None:
                 if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
@@ -248,7 +248,7 @@ class NN:
         plt.savefig("visualize/loss.png", dpi=300, bbox_inches='tight')
         plt.close()
 
-        if self.classfication == True:
+        if self.classification == True:
             plt.plot(self.graph_epoch, self.graph_acc_train, c="cyan", lw=1, label="Training accuracy")
             plt.plot(self.graph_epoch, self.graph_acc_test, c="orange", linestyle="--", lw=1, label="Test accuracy")
             plt.grid(True, linestyle="--", linewidth=0.7, alpha=0.7)
