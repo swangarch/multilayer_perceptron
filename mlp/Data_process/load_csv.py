@@ -21,12 +21,12 @@ def preprocess_data(df):
     truths = data[:, 0]           # (N,)
     inputs = data[:, 1:]          # (N,M)
 
-    # 每列归一化
+    # nomalize col
     X_min = inputs.min(axis=0)
     X_max = inputs.max(axis=0)
     inputs_norm = (inputs - X_min) / (X_max - X_min + 1e-8)
 
-    # 三维化
+    # make sigle data always in a shape of column
     truths = truths[:, np.newaxis, np.newaxis]       # (N,1,1)
     inputs = inputs_norm[:, :, np.newaxis]          # (N,M,1)
 
@@ -45,7 +45,6 @@ def load(path: str) -> pd.DataFrame:
         assert path.endswith(".csv"), "Not csv data."
 
         df = pd.read_csv(path, index_col=0)
-        # print("Loading dataset of dimensions", df.shape)
         return df
 
     except AssertionError as e:
@@ -55,18 +54,3 @@ def load(path: str) -> pd.DataFrame:
     except Exception as e:
         print("Error:", e)
         return None
-
-
-# def clean_data(df: dataframe, method:str="dropnan") -> dataframe:
-# 	"""Clean data, drop nan value line"""
-
-# 	if method == "dropnan":
-# 		num_cols = df.select_dtypes(include=["number"]).columns
-# 		df.dropna(subset=num_cols)
-# 	elif method == "raw":
-# 		return df
-# 	elif method == "mean":
-# 		return df.fillna(df.mean(numeric_only=True))
-# 	elif method == "median":
-# 		return df.fillna(df.median(numeric_only=True))
-# 	return df
