@@ -27,7 +27,6 @@ class NN:
         self.len_out = self.net_shape[-1]
         self.biases = create_bias(self.net_shape, 0.1)
 
-
         self.graph_loss_train = []
         self.graph_loss_test = []
         self.graph_acc_train = []
@@ -92,13 +91,14 @@ class NN:
         return result
 
 
-    def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=20, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
+    def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=50, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
         """Train a dataset."""
 
         self.check_train_params(inputs, truths)
         self.prepare(visualize, threshold)
 
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
+        # inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
         startTime = datetime.now()
         for epoch in range(max_iter):
             inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
@@ -113,7 +113,6 @@ class NN:
             stop = self.show_record(epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
             if stop == True:
                 break
-        print()
         print("[TRAINING DONE]")
         self.plt.ioff()
         self.plt.show()
@@ -123,6 +122,9 @@ class NN:
     def test(self, inputs, truths, test_inputs, test_truths):
         """Test for a new dataset."""
         test_result = self.inference(test_inputs)
+        # for i in range(len(test_result)):
+        #     if ((test_result[i][:, 0][0] >= 0.5).astype(int) != (test_truths[i][:, 0][0] >= 0.5).astype(int)):
+        #         print(f"[INDEX] {i} [PREDICT] {test_result[i][:, 0]} [TRUTH] {test_truths[i][:, 0]}")
         plt.scatter(inputs[:, 0], np.array(truths)[:, 0], c="blue", label="Prediction", s=0.5)
         plt.scatter(test_inputs[:, 0], np.array(test_result)[:, 0], c="red", label="Prediction", s=0.5)
         plt.legend(loc="lower left")
@@ -184,14 +186,14 @@ class NN:
                 self.graph_acc_train.append(acc_train)
                 self.graph_acc_test.append(acc_test)
 
-            if animation is not None and epoch % 50 == 0:
+            if animation != "none" and epoch % 50 == 0:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
             if epoch % 100 == 0:
                 time = str(datetime.now() - startTime).split(".")[0]
                 if self.classification == False:
-                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f}  [TIME] {time}\033[?25h", end="\r")
+                    print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f}  [TIME] {time}\033[?25h")
                 else:
-                    print(f"\033[?25l[EPOCH] {epoch}  [LOSS_TRAIN] {loss_train:8f} [LOSS_TEST] {loss_test:8f} [ACC_TRAIN] {acc_train:5f} [ACC_TEST] {acc_test:5f} [TIME] {time}\033[?25h", end="\r")
+                    print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f} [Acc_Train] {(acc_train * 100):.1f}% [Acc_Val] {(acc_test * 100):.1f}% [TIME] {time}\033[?25h")
 
             if self.loss_train  is not None and self.loss_test is not None:
                 if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
@@ -226,7 +228,6 @@ class NN:
             plt.legend(loc="lower right")
             plt.savefig("visualize/accuracy.png", dpi=300, bbox_inches='tight')
             plt.close()
-            print("Saved")
 
 
     def prepare(self, visualize, threshold):

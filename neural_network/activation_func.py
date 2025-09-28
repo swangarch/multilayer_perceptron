@@ -27,3 +27,12 @@ def activ_deriv(active_func: callable, value:array, deriv_map: dict):
 	if deriv_func is None:
 		return 1
 	return deriv_func(value)
+
+
+def get_activation_funcs_by_name(activs):
+    activmap = {
+        "relu":relu,
+        "sigmoid": sigmoid,
+        "none": None
+    }
+    return [activmap[a] for a in activs]

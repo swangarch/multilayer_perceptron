@@ -65,12 +65,28 @@ def generate_data_rand(seed, number, noise_scale=0.2):
     inputs = []
     truths = []
 
+    num = rd.randint(0, 100)
+
     for _ in range(number):
-        x = np.random.rand()  # 输入在 [0,1]
+        x = np.random.rand() 
         inputs.append(np.array([x]).reshape(-1, 1))
 
-        y = 0.5 * x**2 + 0.3 * np.sin(2 * np.pi * x)
-
+        if num % 7 == 0:
+            y = 0.5 * x**2 + 0.3 * np.sin(2 * np.pi * x) + 0.2 * np.exp(-2*x)
+        elif num % 7 == 1:
+            y = 2*x
+        elif num % 7 == 2:
+            y = x * math.sin(x)
+        elif num % 7 == 3:
+            y = x * (1 - math.exp(-x**2))
+        elif num % 7 == 4:
+            y = math.sin(2*x) * math.exp(-0.1*x) + 0.5 * math.cos(5*x)
+        elif num % 7 == 5:
+            y = 0.5 * x**2 + 0.3 * np.sin(2 * np.pi * x)
+        elif num % 7 == 6:
+            y = - 0.5 * (x - 0.5)**2 + 0.3 
+        
+        # y = - 2 * (x - 0.5)**2 + 0.3
         noise = np.random.normal(0, noise_scale)
         y_noisy = y + noise
 

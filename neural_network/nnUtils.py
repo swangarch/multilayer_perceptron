@@ -102,3 +102,5 @@ def split_dataset(inputs, truths, ratio=0.8):
     return inputs_train, truths_train, inputs_test, truths_test
 
 
+
+

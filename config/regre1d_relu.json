@@ -1,0 +1,12 @@
+{
+    "shape": [1, 32, 16, 1],
+    "activation_funcs": ["relu", "relu", "none"],
+    "max_epoch": 15000,
+    "learning_rate": 0.005,
+    "batch_size": 100,
+    "classification": false,
+    "animation": "plot",
+    "train_ratio": 0.8,
+    "threshold": false,
+    "index": false
+}

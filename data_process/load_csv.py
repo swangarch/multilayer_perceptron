@@ -38,7 +38,7 @@ def preprocess_data(df):
     return inputs, truths
 
 
-def load(path: str) -> pd.DataFrame:
+def load(path: str, index: bool) -> pd.DataFrame:
     """Load a csv file and return it's pandas.DataFrame object."""
 
     try:
@@ -46,7 +46,10 @@ def load(path: str) -> pd.DataFrame:
         assert os.path.exists(path), "Data file not exists."
         assert path.endswith(".csv"), "Not csv data."
 
-        df = pd.read_csv(path, index_col=0)
+        if index:
+            df = pd.read_csv(path, index_col=0)
+        else:
+            df = pd.read_csv(path)
         return df
 
     except AssertionError as e:

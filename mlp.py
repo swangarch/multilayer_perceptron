@@ -1,5 +1,5 @@
-from neural_network import NN, relu, sigmoid, generate_data_1d, generate_data_rand, split_dataset
-from data_process import load, preprocess_data
+from neural_network import NN, generate_data_rand, split_dataset, get_activation_funcs_by_name
+from data_process import load, preprocess_data, conf_parser
 import sys
 
 
@@ -9,51 +9,28 @@ def print_help():
     print("Usage:")
     print("   python  mlp.py  <--options>  <data(optional)>")
     print("Options:")
-    print("  --classification-data:  csv_data need to be provided.")
-    print("  --regression-test:  no csv_data needed, a random generated data will beused.")
+    print("  --class-data:  csv_data need to be provided.")
+    print("  --class-img:  csv_data need to be provided, classification of image.")
+    print("  --regre-test:  no csv_data needed, a random generated data will beused.")
     print("  --help:  Show help messages.")
     print("  --More features to come.")
     print("-------------------------------------------------------------")
 
 
-def test_regression_noise():
-    net_shape = (1, 64, 32, 1)
-    activation_funcs = (relu, relu, None)
+def training(conf, inputs, truths):
 
-    nn = NN(net_shape, activation_funcs)
-
-    inputs, truths = generate_data_rand(142, 500, 0.02)
-    test_inputs, test_truths = generate_data_rand(123, 50, 0.02)
-
-    nn.train(inputs, truths, 10000, 0.005, batch_size=20, animation="plot")
-    nn.test(inputs, truths, test_inputs, test_truths)
-    nn.save_plots()
-
-
-def classification1(inputs, truths):
-    # print(inputs.shape[1])
-    net_shape = (inputs.shape[1], 64, 32, 1)
-    activation_funcs = (relu, relu, sigmoid)
-
-    nn = NN(net_shape, activation_funcs, classification=True)
-
+    net_shape = conf["shape"]
+    activation_funcs = get_activation_funcs_by_name(conf["activation_funcs"])
+    nn = NN(net_shape, activation_funcs, classification=conf["classification"])
     inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths)
+    nn.train(inputs_train, truths_train, 
+             conf["max_epoch"], 
+             conf["learning_rate"], 
+             batch_size=conf["batch_size"], 
+             test_ratio=conf["train_ratio"],
+             threshold=conf["threshold"],
+             animation=conf["animation"])
 
-    nn.train(inputs_train, truths_train, 10000, 0.005, batch_size=20, animation="scatter")
-    nn.test(inputs, truths, inputs_test, truths_test)
-    nn.save_plots()
-
-
-def classification2(inputs, truths):
-    # print(inputs.shape[1])
-    net_shape = (inputs.shape[1], 10, 2, 1)
-    activation_funcs = (relu, relu, sigmoid)
-
-    nn = NN(net_shape, activation_funcs, classification=True)
-
-    inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths)
-
-    nn.train(inputs_train, truths_train, 2500, 0.005, batch_size=len(inputs_train), animation="scatter")
     nn.test(inputs, truths, inputs_test, truths_test)
     nn.save_plots()
 
@@ -62,18 +39,19 @@ def main():
     try:
         argv = sys.argv
 
-        if (len(argv) == 2 and argv[1] == "--help"):
+        if len(argv) == 1 or ((len(argv) == 2 and argv[1] == "--help")):
             print_help()
-        elif (len(argv) == 2 and argv[1] == "--regre-test"):
-            test_regression_noise()
-        elif (len(argv) == 3 and argv[1] == "--class-data"):    
-            df = load(argv[2])
-            inputs, truths = preprocess_data(df)
-            classification1(inputs, truths)
-        elif (len(argv) == 3 and argv[1] == "--class-img"):    
-            df = load(argv[2])
-            inputs, truths = preprocess_data(df)
-            classification2(inputs, truths)
+        elif (len(argv) == 3 and argv[2] == "--gen-data1d"):
+            conf = conf_parser(argv[1])
+            if conf is None:
+                sys.exit(1)
+            if argv[2] == "--gen-data1d":
+                inputs, truths = generate_data_rand(142, 500, 0.02)
+                training(conf, inputs, truths)
+            else:
+                df = load(argv[2], conf["index"])
+                inputs, truths = preprocess_data(df)
+                training(conf, inputs, truths)
         else:
             raise ValueError("Wrong arguments. Try: python mlp.py --help")
 
