@@ -1,10 +1,10 @@
 import numpy as np
-# import cupy as np
 from .activation_func import *
 from .nnUtils import *
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
+import json
 
 
 class NN:
@@ -26,6 +26,16 @@ class NN:
         self.len_nets = len(self.nets)
         self.len_out = self.net_shape[-1]
         self.biases = create_bias(self.net_shape, 0.1)
+
+        # print("----------------------------------")
+        # print("[Create Neural network]")
+        # print("[Weights]", end="  ")
+        # [print(w.shape, end=" ") for w in self.nets]
+        # print()
+        # print("[Biases]", end="  ")
+        # [print(b.shape, end=" ") for b in self.biases]
+        # print()
+        # print("----------------------------------")
 
         self.graph_loss_train = []
         self.graph_loss_test = []
@@ -100,23 +110,67 @@ class NN:
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
         # inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
         startTime = datetime.now()
-        for epoch in range(max_iter):
-            inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
-            # mini_batch_training
-            count = 0
-            while count < len(inputs_train):
-                inputs_batch = inputs_train[count: count + batch_size]
-                truths_batch = truths_train[count: count + batch_size]
-                self.train_batch(inputs_batch, truths_batch, learning_rate)
-                count += batch_size
-            # mini_batch_training
-            stop = self.show_record(epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
-            if stop == True:
-                break
-        print("[TRAINING DONE]")
-        self.plt.ioff()
-        self.plt.show()
-        self.plt.close()
+        try:
+            for epoch in range(max_iter):
+                inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
+                # mini_batch_training
+                count = 0
+                while count < len(inputs_train):
+                    inputs_batch = inputs_train[count: count + batch_size]
+                    truths_batch = truths_train[count: count + batch_size]
+                    self.train_batch(inputs_batch, truths_batch, learning_rate)
+                    count += batch_size
+                # mini_batch_training
+                stop = self.show_record(epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
+                if stop == True:
+                    break
+            print("[TRAINING DONE]")
+            self.plt.ioff()
+            self.plt.show()
+            self.plt.close()
+
+        except KeyboardInterrupt:
+            print("Stopped by user.\033[?25h")
+        self.save_weights()
+
+
+    def load_weights(self, file):
+        if file is None:
+            return
+    
+        with open(file, mode="r") as f:
+            params = json.load(f)    
+        ws = [np.array(w) for w in params["weights"]]
+        bs = [np.array(b) for b in params["biases"]]
+        # print("----------------------------------")
+        # print("[Load weights]", end="  ")
+        # [print(w.shape, end=" ") for w in ws]
+        # print()
+        # print("[Load biases]", end="  ")
+        # [print(b.shape, end=" ") for b in bs]
+        # print()
+        # print("----------------------------------")
+        for i in range(len(self.nets)):
+            if self.nets[i].shape != ws[i].shape or self.biases[i].shape != bs[i].shape:
+                print("[Load params from file failed, mismatched]")
+                return
+
+        self.nets = ws
+        self.biases = bs
+
+
+    def save_weights(self):
+        weights_li = [ arr.tolist() for arr in self.nets ]
+        biases_li = [ arr.tolist() for arr in self.biases ]
+        # print(weights_li)
+        # print(biases_li)
+        model_params = {
+            "weights": weights_li,
+            "biases": biases_li,
+        }
+        with open("params.json", "w", encoding="utf-8") as f:
+            json.dump(model_params, f, indent=4)
+        print("[Params saved => (params.json)]\033[?25h")
 
 
     def test(self, inputs, truths, test_inputs, test_truths):
@@ -157,7 +211,7 @@ class NN:
             raise TypeError("Wrong animation type")
         self.plt.legend(loc="lower left")
         self.plt.pause(0.1)
-        
+
 
     def show_record(self, epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation): #return a boolean to determine if training continue
         """Show and record the loss"""
@@ -198,10 +252,8 @@ class NN:
             if self.loss_train  is not None and self.loss_test is not None:
                 if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
                     return True
-                    
             self.loss_train = loss_train
             self.loss_test = loss_test
-
         return False
 
 

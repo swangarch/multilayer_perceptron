@@ -86,7 +86,6 @@ def generate_data_rand(seed, number, noise_scale=0.2):
         elif num % 7 == 6:
             y = - 0.5 * (x - 0.5)**2 + 0.3 
         
-        # y = - 2 * (x - 0.5)**2 + 0.3
         noise = np.random.normal(0, noise_scale)
         y_noisy = y + noise
 
