@@ -173,17 +173,25 @@ class NN:
         print("[Params saved => (params.json)]\033[?25h")
 
 
-    def test(self, inputs, truths, test_inputs, test_truths):
+    def test(self, test_inputs, test_truths):
         """Test for a new dataset."""
         test_result = self.inference(test_inputs)
-        # for i in range(len(test_result)):
-        #     if ((test_result[i][:, 0][0] >= 0.5).astype(int) != (test_truths[i][:, 0][0] >= 0.5).astype(int)):
-        #         print(f"[INDEX] {i} [PREDICT] {test_result[i][:, 0]} [TRUTH] {test_truths[i][:, 0]}")
-        plt.scatter(inputs[:, 0], np.array(truths)[:, 0], c="blue", label="Prediction", s=0.5)
-        plt.scatter(test_inputs[:, 0], np.array(test_result)[:, 0], c="red", label="Prediction", s=0.5)
+        plt.scatter(test_inputs[:, 0], np.array(test_truths)[:, 0], c="blue", label="Test truth", s=0.5)
+        plt.scatter(test_inputs[:, 0], np.array(test_result)[:, 0], c="red", label="Test prediction", s=0.5)
         plt.legend(loc="lower left")
         plt.savefig("visualize/prediction.png", dpi=300, bbox_inches='tight')
         plt.close()
+        if self.classification == True:
+            test_result = [ (arr > 0.5).astype(int) for arr in test_result ]
+            count = 0
+            l = len(test_result)
+            for i in range(len(test_result)):
+                if test_result[i][:, 0] == test_truths[i][:, 0]:
+                    count += 1
+            print(f"[Test Acc] {(count / l) * 100:.2f}%")
+        with open("predictions.json", "w", encoding="utf-8") as f:
+            json.dump({"prediction": [r.tolist() for r in test_result]}, f, indent=4)
+        print("[Predictions saved => (predictions.json)]\033[?25h")
 
 
     def test_animation(self, test_inputs, test_truths, animation):

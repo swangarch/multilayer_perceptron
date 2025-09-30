@@ -5,3 +5,9 @@ visualize
 venv
 
 params.json
+
+predictions.json
+
+test.csv
+
+train.csv
