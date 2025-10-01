@@ -78,7 +78,7 @@ class NN:
         # -----------------------------forward end-----------------------------
         # -----------------------------back probab --------------------------------
         # Last layer
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] in [sigmoid, "softmax"]:
+        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] in [sigmoid, softmax]:
             local_grad = actives[-1] - truths_batch
         else:
             local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], self.deriv_map) # last layer difference
@@ -112,6 +112,13 @@ class NN:
         self.check_train_params(inputs, truths)
         self.prepare(visualize, threshold)
 
+        if self.loss_func == "CrossEntropy":
+            shape = truths.shape
+            onehot = np.zeros((shape[0], self.nets[-1]))
+            onehotindex = truths[:,0].astype(int)
+            onehot[np.arange(shape[0]), onehotindex] = 1
+            truths = onehot
+        
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
         # inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
         startTime = datetime.now()

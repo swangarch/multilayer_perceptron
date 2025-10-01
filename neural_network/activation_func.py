@@ -31,11 +31,13 @@ def activ_deriv(active_func: callable, value:array, deriv_map: dict):
 	if active_func is None:
 		return 1
 	
+	if active_func == softmax:
+		raise ValueError("Softmax derivative not implemented")
+	
 	deriv_func = deriv_map[active_func]
 	if deriv_func is None:
 		return 1
 	return deriv_func(value)
-
 
 
 def get_activation_funcs_by_name(activs):
