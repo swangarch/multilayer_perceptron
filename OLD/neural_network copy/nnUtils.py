@@ -23,7 +23,6 @@ def create_actives(net_shape:tuple, value):
 def forward_layer(weights:array, activations:array, biases:array, activ_func):
     """Perform layer forwarding."""
 
-    # print(weights.shape, activations.shape)
     res = weights @ activations + biases
     if activ_func is None:
         return res
@@ -41,10 +40,7 @@ def init_matrix(shapes: tuple, value:float, random=False):
         if random == False:
             matrix = np.full((shapes[i + 1], shapes[i]), value, dtype=np.float32)
         else:
-            # He init
             matrix = np.random.randn(shapes[i + 1], shapes[i]) * np.sqrt(2.0 / shapes[i])
-            # # Xavier initialization
-            # matrix = np.random.randn(shapes[i + 1], shapes[i]) * np.sqrt(1.0 / shapes[i])
         matrixs.append(matrix)
     return matrixs
 
@@ -75,19 +71,15 @@ def mse_loss(truth: array, predict: array):
 
     return 0.5 * np.mean((truth - predict) ** 2)
 
-def ce_loss(truth: array, predict: array):
-    """Calculate cross entropy loss."""
-
-    eps = 1e-12
-    predict = np.clip(predict, eps, 1 - eps)
-    return -np.mean(np.sum(truth * np.log(predict), axis=1))
-
 
 def accuracy_1d(truth: array, predict: array, onehot: bool):
     """"""
+    
+    # print(truth.shape)
+    # print(predict.shape)
 
     if onehot == True:
-        predict = np.argmax(predict, axis=1, keepdims=True)
+        predict = np.argmax(predict, axis=1)
 
     truth_flat = truth.reshape(-1)
     predict_flat = predict.reshape(-1)

@@ -1,7 +1,7 @@
 {
     "shape": [30, 64, 32, 1],
     "activation_funcs": ["relu", "relu", "sigmoid"],
-    "loss": ["MeanSquareError"],
+    "loss": "MeanSquareError",
     "max_epoch": 10000,
     "learning_rate": 0.005,
     "batch_size": 50,

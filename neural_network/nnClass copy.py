@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import json
-import sys
 
 
 class NN:
@@ -26,10 +25,18 @@ class NN:
         self.nets = network(self.net_shape)
         self.len_nets = len(self.nets)
         self.len_out = self.net_shape[-1]
-        # self.biases = create_bias(self.net_shape, 0.1)
-        self.biases = create_bias(self.net_shape, 0)
+        self.biases = create_bias(self.net_shape, 0.1)
         self.loss_func = loss
-        # print(self.loss_func)
+        print(self.loss_func)
+        # print("----------------------------------")
+        # print("[Create Neural network]")
+        # print("[Weights]", end="  ")
+        # [print(w.shape, end=" ") for w in self.nets]
+        # print()
+        # print("[Biases]", end="  ")
+        # [print(b.shape, end=" ") for b in self.biases]
+        # print()
+        # print("----------------------------------")
 
         self.graph_loss_train = []
         self.graph_loss_test = []
@@ -45,7 +52,9 @@ class NN:
         self.deriv_map = dict()
         self.deriv_map[relu] = relu_deriv
         self.deriv_map[sigmoid] = sigmoid_deriv
+
         self.classification = classification
+
 
     def check_train_params(self, inputs, truths):
         """Check training parameters."""
@@ -56,22 +65,9 @@ class NN:
 
     def train_batch(self, inputs, truths, learning_rate=0.01):
         """Train a batch."""
-
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
-            batch_size = truths.shape[0]
-            num_classes = self.net_shape[-1]   # 你的输出层神经元数，比如 2
-            onehot = np.zeros((batch_size, num_classes))
-            onehotindex = truths[:,0].astype(int)
-            onehot[np.arange(batch_size), onehotindex] = 1
-            truths = onehot
-
-        # print(inputs.T.shape)
-        # print(truths.T.shape)
-        # sys.exit(1)
-
-        inputs_batch = inputs.T   # (batch_size, features) -> (features, batch_size)
-        truths_batch = truths.T
-
+    
+        inputs_batch = np.hstack(inputs)
+        truths_batch = np.hstack(truths)
         # -----------------------------forward --------------------------------
         actives = [inputs_batch]
         Bgrads = []
@@ -101,19 +97,39 @@ class NN:
     def inference(self, inputs):
         """After training, use weights to do inference."""
 
-        activ = inputs.T
-        for i in range(self.len_nets):
-            activ = forward_layer(self.nets[i], activ, self.biases[i], self.activ_funcs[i])
-        return activ.T
+        result = []
+        for input in inputs:
+            activ = input
+            for i in range(self.len_nets):
+                activ = forward_layer(self.nets[i], activ, self.biases[i], self.activ_funcs[i])
+            result.append(activ)
+        return result
 
 
     def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=50, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
         """Train a dataset."""
 
+
         self.check_train_params(inputs, truths)
         self.prepare(visualize, threshold)
 
+        if self.loss_func == "CrossEntropy":
+            shape = truths.shape
+            # print(1, shape)
+            onehot = np.zeros((shape[0], self.net_shape[-1], 1))
+            # print(2, shape)
+            onehotindex = truths[:,0,0].astype(int)
+            print(onehotindex[:10])
+            print(onehot[:10])
+            onehot[np.arange(batch_size), onehotindex] = 1
+            truths = onehot
+            print(truths[:10])
+        
+        # print(truths[:10])
+        return 
+        
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
+        # inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
         startTime = datetime.now()
         try:
             for epoch in range(max_iter):
@@ -147,10 +163,19 @@ class NN:
             params = json.load(f)    
         ws = [np.array(w) for w in params["weights"]]
         bs = [np.array(b) for b in params["biases"]]
+        # print("----------------------------------")
+        # print("[Load weights]", end="  ")
+        # [print(w.shape, end=" ") for w in ws]
+        # print()
+        # print("[Load biases]", end="  ")
+        # [print(b.shape, end=" ") for b in bs]
+        # print()
+        # print("----------------------------------")
         for i in range(len(self.nets)):
             if self.nets[i].shape != ws[i].shape or self.biases[i].shape != bs[i].shape:
                 print("[Load params from file failed, mismatched]")
                 return
+
         self.nets = ws
         self.biases = bs
 
@@ -158,6 +183,8 @@ class NN:
     def save_weights(self):
         weights_li = [ arr.tolist() for arr in self.nets ]
         biases_li = [ arr.tolist() for arr in self.biases ]
+        # print(weights_li)
+        # print(biases_li)
         model_params = {
             "weights": weights_li,
             "biases": biases_li,
@@ -180,7 +207,7 @@ class NN:
             count = 0
             l = len(test_result)
             for i in range(len(test_result)):
-                if test_result[i][:] == test_truths[i][:]:
+                if test_result[i][:, 0] == test_truths[i][:, 0]:
                     count += 1
             print(f"[Test Acc] {(count / l) * 100:.2f}%")
         with open("predictions.json", "w", encoding="utf-8") as f:
@@ -221,25 +248,16 @@ class NN:
         if epoch % 50 == 0:
             predicts_train = self.inference(inputs_train)
             predicts_test = self.inference(inputs_test)
-
-            if self.loss_func == "CrossEntropy":
-                loss_train = loss(ce_loss, truths_train, predicts_train)
-                loss_test = loss(ce_loss, truths_test, predicts_test)
-            else:    
-                loss_train = loss(mse_loss, truths_train, predicts_train)
-                loss_test = loss(mse_loss, truths_test, predicts_test)
+            loss_train = loss(mse_loss, truths_train, predicts_train)
+            loss_test = loss(mse_loss, truths_test, predicts_test)
 
             # if classification == True:
             predicts_train = np.array(predicts_train, dtype=np.float32)
             predicts_test = np.array(predicts_test, dtype=np.float32)
             predict_train_class = (predicts_train >= 0.5).astype(np.int32)
             predict_test_class = (predicts_test >= 0.5).astype(np.int32)
-            if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
-                onehot = True
-            else:
-                onehot = False
-            acc_train = accuracy_1d(truths_train, predict_train_class, onehot)
-            acc_test = accuracy_1d(truths_test, predict_test_class, onehot)
+            acc_train = accuracy_1d(truths_train, predict_train_class)
+            acc_test = accuracy_1d(truths_test, predict_test_class)
 
 
             if loss_train < 1 and loss_test < 1:

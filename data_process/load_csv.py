@@ -29,11 +29,11 @@ def preprocess_data(df):
     inputs_norm = (inputs - X_min) / (X_max - X_min + 1e-8)
 
     # make sigle data always in a shape of column
-    truths = truths[:, np.newaxis, np.newaxis]     # (N,1,1)
-    inputs = inputs_norm[:, :, np.newaxis]          # (N,M,1)
+    truths = truths[:, np.newaxis]     # (N,V)
+    inputs = inputs_norm[:, :]          # (N,M)
 
-    print("[INPUTS]", inputs.shape)   # (N,M,1)
-    print("[TRUTHS]", truths.shape)   # (N,1,1)
+    print("[INPUTS]", inputs.shape)   # (N,M)
+    print("[TRUTHS]", truths.shape)   # (N,V)
     
     return inputs, truths
 
