@@ -1,6 +1,7 @@
 {
     "shape": [1, 32, 16, 1],
     "activation_funcs": ["relu", "relu", "none"],
+    "loss": ["MeanSquareError"],
     "max_epoch": 12000,
     "learning_rate": 0.005,
     "batch_size": 100,

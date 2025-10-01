@@ -16,6 +16,8 @@ def check_arg_type(conf: dict) -> bool:
         return False
     elif wrong_type(conf, "activation_funcs", (list,tuple), True):
         return False
+    if wrong_type(conf, "loss", str, True):
+        return False
     if wrong_type(conf, "max_epoch", int, True):
         return False
     elif wrong_type(conf, "learning_rate", float, True):
@@ -38,6 +40,8 @@ def check_arg_type(conf: dict) -> bool:
 def valid_net_struct(conf: dict) -> bool:
     shape = conf["shape"]
     activ_funcs = conf["activation_funcs"]
+    loss = conf["loss"]
+
 
     if len(shape) < 4:
         raise ValueError("Minimum layer is 4.")
@@ -47,8 +51,13 @@ def valid_net_struct(conf: dict) -> bool:
         if not isinstance(num, int) or num < 1:
             raise ValueError("Wrong layer neuron numbers")
     for act in activ_funcs:
-        if act not in ["relu", "sigmoid", "gelu", "softmax", "none"]:
+        if act not in ["relu", "sigmoid", "leaky_relu", "gelu", "softmax", "none"]:
             raise ValueError("Wrong activation funcion")
+    if loss not in ["CrossEntropy", "MeanSquareError"]:
+        raise ValueError("Wrong loss function")
+    if loss == "CrossEntropy" and activ_funcs[-1] not in  ["sigmoid", "softmax"]:
+        raise ValueError("CrossEntropy loss only accept sigmoid or softmax as last layer activation function")
+    
     return True
 
 
@@ -84,6 +93,8 @@ def conf_parser(config: str):
 
 def main():
     conf = conf_parser(sys.argv[1])
+    if conf is None:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

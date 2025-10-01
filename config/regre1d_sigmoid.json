@@ -1,6 +1,7 @@
 {
     "shape": [1, 32, 16, 1],
     "activation_funcs": ["sigmoid", "sigmoid", "none"],
+    "loss": ["MeanSquareError"],
     "max_epoch": 20000,
     "learning_rate": 0.1,
     "batch_size": 100,

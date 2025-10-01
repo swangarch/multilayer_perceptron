@@ -15,6 +15,14 @@ def sigmoid(value: array):
 	return 1.0 / (1.0 + math.e ** -value)
 
 
+def softmax(value: array):
+	exp_ = np.exp(value - np.max(value, axis=1, keepdims=True))
+	# avoid overflow
+	sum_ = np.sum(exp_, axis=1, keepdims=True)
+	soft_ = exp_ / sum_
+	return soft_
+ 
+
 def sigmoid_deriv(value: array):
 	return value * (1 - value)
 
@@ -29,10 +37,12 @@ def activ_deriv(active_func: callable, value:array, deriv_map: dict):
 	return deriv_func(value)
 
 
+
 def get_activation_funcs_by_name(activs):
     activmap = {
         "relu":relu,
         "sigmoid": sigmoid,
+		"softmax": softmax,
         "none": None
     }
     return [activmap[a] for a in activs]

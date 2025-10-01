@@ -10,7 +10,7 @@ import json
 class NN:
     """Neural network class, which can perform training and prediction"""
 
-    def __init__(self, shape, activation_functions, classification=False):
+    def __init__(self, shape, activation_functions, classification=False, loss="MeanSquareError"):
         """Init a multi layer perceptron."""
         
         if len(shape) < 4:
@@ -26,7 +26,8 @@ class NN:
         self.len_nets = len(self.nets)
         self.len_out = self.net_shape[-1]
         self.biases = create_bias(self.net_shape, 0.1)
-
+        self.loss_func = loss
+        print(self.loss_func)
         # print("----------------------------------")
         # print("[Create Neural network]")
         # print("[Weights]", end="  ")
@@ -76,7 +77,11 @@ class NN:
             actives.append(forward_layer(self.nets[i], actives[i], self.biases[i], self.activ_funcs[i]))
         # -----------------------------forward end-----------------------------
         # -----------------------------back probab --------------------------------
-        local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], self.deriv_map) # last layer difference
+        # Last layer
+        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] in [sigmoid, "softmax"]:
+            local_grad = actives[-1] - truths_batch
+        else:
+            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], self.deriv_map) # last layer difference
         Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
         Wgrads.append(local_grad @ actives[-2].T / len(inputs))
     
