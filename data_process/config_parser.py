@@ -16,9 +16,11 @@ def check_arg_type(conf: dict) -> bool:
         return False
     elif wrong_type(conf, "activation_funcs", (list,tuple), True):
         return False
-    if wrong_type(conf, "loss", str, True):
+    elif wrong_type(conf, "weights_init", (list,tuple), True):
         return False
-    if wrong_type(conf, "max_epoch", int, True):
+    elif wrong_type(conf, "loss", str, True):
+        return False
+    elif wrong_type(conf, "max_epoch", int, True):
         return False
     elif wrong_type(conf, "learning_rate", float, True):
         return False
@@ -41,7 +43,7 @@ def valid_net_struct(conf: dict) -> bool:
     shape = conf["shape"]
     activ_funcs = conf["activation_funcs"]
     loss = conf["loss"]
-
+    init = conf["weights_init"]
 
     if len(shape) < 4:
         raise ValueError("Minimum layer is 4.")
@@ -58,6 +60,12 @@ def valid_net_struct(conf: dict) -> bool:
     if loss == "CrossEntropy" and activ_funcs[-1] not in  ["sigmoid", "softmax"]:
         raise ValueError("CrossEntropy loss only accept sigmoid or softmax as last layer activation function")
     
+    for init_method in init:
+        if not init_method in ["he", "xavier", "zero"]:
+            raise ValueError("Not supported initialization method")
+    if len(init) != len(activ_funcs):
+        raise ValueError("Wrong initialization method numbers")
+
     return True
 
 

@@ -1,7 +1,6 @@
 from .activation_func import relu, sigmoid, get_activation_funcs_by_name
-from .data_generation import *
 from .nnClass import NN
 from .nnUtils import *
 
 
-__all__ = ["NN", relu, sigmoid, generate_data_rand, split_dataset, get_activation_funcs_by_name]
+__all__ = ["NN", relu, sigmoid, split_dataset, get_activation_funcs_by_name]

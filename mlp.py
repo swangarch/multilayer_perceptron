@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-from neural_network import NN, generate_data_rand, split_dataset, get_activation_funcs_by_name
-from data_process import load, preprocess_data, conf_parser
-import sys, json
-import numpy as np
+from neural_network import NN,  get_activation_funcs_by_name
+from data_process import load, preprocess_data, conf_parser, generate_data_rand
+import sys
 
 
 def print_help():
@@ -47,7 +46,6 @@ def mlp_getdata(source, conf):
 def mlp_splitdata(config_file, file, seed, ratio=0.8):
     print(config_file)
     conf = conf_parser(config_file)
-    # print(conf)
     df = load(file, conf["index"])
     if df is None:
         sys.exit(1)
@@ -69,6 +67,7 @@ def mlp_create_nn(argv):
     if conf is None:
         sys.exit(1)
     nn = NN(conf["shape"], get_activation_funcs_by_name(conf["activation_funcs"]), 
+            conf["weights_init"],
             classification=conf["classification"],
             loss=conf["loss"])
     inputs, truths = mlp_getdata(argv[3], conf)
@@ -78,7 +77,7 @@ def mlp_create_nn(argv):
 
 
 def main():
-    # try:
+    try:
         argv = sys.argv
         if len(argv) == 1 or ((len(argv) == 2 and argv[1] == "--help")):
             print_help()
@@ -95,12 +94,12 @@ def main():
         else:
             raise ValueError("Wrong arguments. Try: python mlp.py --help")
 
-    # except KeyboardInterrupt as e:
-    #     print()
-    #     print("Stopped by user.\033[?25h")
+    except KeyboardInterrupt as e:
+        print()
+        print("Stopped by user.\033[?25h")
 
-    # except Exception as e:
-    #     print("Error:", e)
+    except Exception as e:
+        print("Error:", e)
 
 
 if __name__ == "__main__":

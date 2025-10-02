@@ -1,0 +1,14 @@
+{
+    "shape": [30, 15, 10, 2],
+    "activation_funcs": ["relu", "relu", "softmax"],
+    "weights_init": ["he", "he", "he"],
+    "loss": "CrossEntropy",
+    "max_epoch": 10000,
+    "learning_rate": 0.005,
+    "batch_size": 100,
+    "classification": true,
+    "animation": "scatter",
+    "train_ratio": 0.8,
+    "threshold": false,
+    "index": true
+}

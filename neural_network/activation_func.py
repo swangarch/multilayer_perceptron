@@ -17,8 +17,6 @@ def sigmoid(value: array):
 
 
 def softmax(value: array):
-	# print(value.shape)
-	# sys.exit(1)
 	exp_ = np.exp(value - np.max(value, axis=0, keepdims=True))
 	sum_ = np.sum(exp_, axis=0, keepdims=True)
 	soft_ = exp_ / sum_
@@ -32,10 +30,8 @@ def sigmoid_deriv(value: array):
 def activ_deriv(active_func: callable, value:array, deriv_map: dict):
 	if active_func is None:
 		return 1
-	
 	if active_func == softmax:
 		raise ValueError("Softmax derivative not implemented")
-	
 	deriv_func = deriv_map[active_func]
 	if deriv_func is None:
 		return 1

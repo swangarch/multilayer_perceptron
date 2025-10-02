@@ -11,7 +11,7 @@ import sys
 class NN:
     """Neural network class, which can perform training and prediction"""
 
-    def __init__(self, shape, activation_functions, classification=False, loss="MeanSquareError"):
+    def __init__(self, shape, activation_functions, init_methods, classification=False, loss="MeanSquareError"):
         """Init a multi layer perceptron."""
         
         if len(shape) < 4:
@@ -20,16 +20,15 @@ class NN:
             raise ValueError("Mismatched net shape and activation functions.")
         
         self.net_shape = shape
+        self.init_methods = init_methods
         print("[NET] ", self.net_shape)
         self.activ_funcs = activation_functions
 
-        self.nets = network(self.net_shape)
+        self.nets = network(self.net_shape, self.init_methods)
         self.len_nets = len(self.nets)
         self.len_out = self.net_shape[-1]
-        # self.biases = create_bias(self.net_shape, 0.1)
         self.biases = create_bias(self.net_shape, 0)
         self.loss_func = loss
-        # print(self.loss_func)
 
         self.graph_loss_train = []
         self.graph_loss_test = []
@@ -47,6 +46,7 @@ class NN:
         self.deriv_map[sigmoid] = sigmoid_deriv
         self.classification = classification
 
+
     def check_train_params(self, inputs, truths):
         """Check training parameters."""
 
@@ -59,12 +59,10 @@ class NN:
 
         inputs_batch = inputs.T   # (batch_size, features) -> (features, batch_size)
         truths_batch = truths.T
-
         # -----------------------------forward --------------------------------
         actives = [inputs_batch]
         Bgrads = []
         Wgrads = []
-
         for i in range(self.len_nets):
             actives.append(forward_layer(self.nets[i], actives[i], self.biases[i], self.activ_funcs[i]))
         # -----------------------------forward end-----------------------------
@@ -96,14 +94,12 @@ class NN:
     
 
     def convert_to_onehot(self, array):  # array => (batchsize, category)
-        # print("a before", array.shape)
         batch_size = array.shape[0]
         num_classes = self.net_shape[-1]
         onehot = np.zeros((batch_size, num_classes))
         onehotindex = array[:,0].astype(int)
         onehot[np.arange(batch_size), onehotindex] = 1
         array = onehot
-        # print("a after", array.shape)
         return array
 
 
@@ -112,13 +108,11 @@ class NN:
 
         self.check_train_params(inputs, truths)
         self.prepare(visualize, threshold)
-
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
 
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
             truths_test = self.convert_to_onehot(truths_test)
             truths_train = self.convert_to_onehot(truths_train)
-
         startTime = datetime.now()
         try:
             for epoch in range(max_iter):
@@ -138,7 +132,6 @@ class NN:
             self.plt.ioff()
             self.plt.show()
             self.plt.close()
-
         except KeyboardInterrupt:
             print("Stopped by user.\033[?25h")
         self.save_weights()
@@ -147,7 +140,6 @@ class NN:
     def load_weights(self, file):
         if file is None:
             return
-    
         with open(file, mode="r") as f:
             params = json.load(f)    
         ws = [np.array(w) for w in params["weights"]]
@@ -190,7 +182,7 @@ class NN:
             for i in range(len(test_result)):
                 if test_result[i] == test_truths[i]:
                     count += 1
-            print(f"[Test Acc] {(count / l) * 100:.2f}%")
+            print(f"[Acc_Test] {(count / l) * 100:.2f}%")
         with open("predictions.json", "w", encoding="utf-8") as f:
             json.dump({"prediction": [r.tolist() for r in test_result]}, f, indent=4)
         print("[Predictions saved => (predictions.json)]\033[?25h")
@@ -221,6 +213,7 @@ class NN:
             raise TypeError("Wrong animation type")
         self.plt.legend(loc="lower left")
         self.plt.pause(0.1)
+        self.plt.clf()
 
 
     def cal_loss(self, truths_train, predicts_train, truths_test, predicts_test):
@@ -239,38 +232,27 @@ class NN:
     
     def get_category_by_predict(self, predicts_train, predicts_test, truths_train, truths_test):
         
-        # print(predicts_train.shape)
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
             predict_train_cat = predicts_train.argmax(axis=1, keepdims=True)
             predict_test_cat = predicts_test.argmax(axis=1, keepdims=True)
-            onehot = True
+            truths_train_original = np.argmax(truths_train, axis=1, keepdims=True)
+            truths_test_original = np.argmax(truths_test, axis=1, keepdims=True)
         elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
             predict_train_cat = (predicts_train >= 0.5).astype(np.int32)
             predict_test_cat = (predicts_test >= 0.5).astype(np.int32)
-            onehot = False
+            truths_train_original = truths_train
+            truths_test_original = truths_test
         else:
             return None, None
-        
-        # print("------------------------")
-        # print(predict_train_cat.shape)
-        # print(predict_test_cat.shape)
 
-        truths_train_original = np.argmax(truths_train, axis=1, keepdims=True)
-        truths_test_original = np.argmax(truths_test, axis=1, keepdims=True)
-
-        # print(truths_train.shape)
-        # print(truths_test.shape)
-        # print("------------------------")
-
-        acc_train = accuracy_1d(truths_train_original, predict_train_cat, onehot)
-        acc_test = accuracy_1d(truths_test_original, predict_test_cat, onehot)
+        acc_train = accuracy_1d(truths_train_original, predict_train_cat)
+        acc_test = accuracy_1d(truths_test_original, predict_test_cat)
         return acc_train, acc_test
 
 
     def collect_train_record(self, epoch, loss_train, loss_test, acc_train, acc_test):
-        if loss_train < 1 and loss_test < 1:
-            self.graph_loss_train.append(loss_train)
-            self.graph_loss_test.append(loss_test)
+        self.graph_loss_train.append(loss_train)
+        self.graph_loss_test.append(loss_test)
         self.graph_epoch.append(epoch)
         if self.classification == True and acc_test is not None and acc_train is not None:
             self.graph_acc_train.append(acc_train)
@@ -292,8 +274,7 @@ class NN:
         if epoch % 50 == 0:
             predicts_train = self.inference(inputs_train)
             predicts_test = self.inference(inputs_test)
-            
-
+    
             loss_train, loss_test = self.cal_loss(truths_train, predicts_train, truths_test, predicts_test)
             acc_train, acc_test = None, None
 
@@ -301,10 +282,8 @@ class NN:
                 acc_train, acc_test = self.get_category_by_predict(predicts_train, predicts_test, truths_train, truths_test)
 
             self.collect_train_record(epoch, loss_train, loss_test, acc_train, acc_test)
-
             if animation != "none" and epoch % 50 == 0:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
-            
             self.show_train_info(epoch, startTime, loss_train, loss_test, acc_train, acc_test)
 
             # Early stop --------------------------------------

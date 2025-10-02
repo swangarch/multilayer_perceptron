@@ -23,7 +23,6 @@ def create_actives(net_shape:tuple, value):
 def forward_layer(weights:array, activations:array, biases:array, activ_func):
     """Perform layer forwarding."""
 
-    # print(weights.shape, activations.shape)
     res = weights @ activations + biases
     if activ_func is None:
         return res
@@ -31,28 +30,25 @@ def forward_layer(weights:array, activations:array, biases:array, activ_func):
         return activ_func(res)
 
 
-def init_matrix(shapes: tuple, value:float, random=False):
+def init_matrix(shapes: tuple, init_method: tuple):
     """Init matrix in given shapes."""
 
     matrixs = []
-    # if (len(shapes) < 4):
-    #     raise ValueError("Invalid network structure.")
     for i in range(len(shapes) - 1):
-        if random == False:
-            matrix = np.full((shapes[i + 1], shapes[i]), value, dtype=np.float32)
-        else:
-            # He init
+        if init_method[i] == "zero":
+            matrix = np.zeros((shapes[i + 1], shapes[i]), dtype=np.float32)
+        elif init_method[i] == "he":
             matrix = np.random.randn(shapes[i + 1], shapes[i]) * np.sqrt(2.0 / shapes[i])
-            # # Xavier initialization
-            # matrix = np.random.randn(shapes[i + 1], shapes[i]) * np.sqrt(1.0 / shapes[i])
+        elif init_method[i] == "xavier":
+            matrix = np.random.randn(shapes[i + 1], shapes[i]) * np.sqrt(1.0 / shapes[i])
         matrixs.append(matrix)
     return matrixs
 
 
-def network(net: tuple):
+def network(net: tuple, init_method: tuple):
     """Init network weights."""
 
-    return init_matrix(net, 0.1, True)
+    return init_matrix(net, init_method)
 
 
 def gradient_descent(nets, biases, Wgrads_mean, Bgrads_mean, learning_rate):
@@ -83,13 +79,8 @@ def ce_loss(truth: array, predict: array):
     return -np.mean(np.sum(truth * np.log(predict), axis=1))
 
 
-def accuracy_1d(truth: array, predict: array, onehot: bool):
+def accuracy_1d(truth: array, predict: array):
     """"""
-
-    # print(predict.shape)
-    # sys.exit(1)
-    # if onehot == True:
-    #     predict = np.argmax(predict, axis=1, keepdims=True)
 
     truth_flat = truth.reshape(-1)
     predict_flat = predict.reshape(-1)
