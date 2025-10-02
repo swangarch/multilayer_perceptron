@@ -1,6 +1,7 @@
 from numpy import ndarray as array
 import math
 import numpy as np
+import sys
 
 
 def relu(value: array):
@@ -16,9 +17,10 @@ def sigmoid(value: array):
 
 
 def softmax(value: array):
-	exp_ = np.exp(value - np.max(value, axis=1, keepdims=True))
-	# avoid overflow
-	sum_ = np.sum(exp_, axis=1, keepdims=True)
+	# print(value.shape)
+	# sys.exit(1)
+	exp_ = np.exp(value - np.max(value, axis=0, keepdims=True))
+	sum_ = np.sum(exp_, axis=0, keepdims=True)
 	soft_ = exp_ / sum_
 	return soft_
  

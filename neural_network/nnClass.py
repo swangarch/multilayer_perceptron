@@ -59,15 +59,11 @@ class NN:
 
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
             batch_size = truths.shape[0]
-            num_classes = self.net_shape[-1]   # 你的输出层神经元数，比如 2
+            num_classes = self.net_shape[-1]
             onehot = np.zeros((batch_size, num_classes))
             onehotindex = truths[:,0].astype(int)
             onehot[np.arange(batch_size), onehotindex] = 1
             truths = onehot
-
-        # print(inputs.T.shape)
-        # print(truths.T.shape)
-        # sys.exit(1)
 
         inputs_batch = inputs.T   # (batch_size, features) -> (features, batch_size)
         truths_batch = truths.T
@@ -95,7 +91,10 @@ class NN:
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------
+        # print("Before:", np.linalg.norm(self.nets[0]))
         gradient_descent(self.nets, self.biases, Wgrads[::-1], Bgrads[::-1], learning_rate)
+        # print("After:", np.linalg.norm(self.nets[0]))
+        # sys.exit(1)
 
 
     def inference(self, inputs):
@@ -215,54 +214,83 @@ class NN:
         self.plt.pause(0.1)
 
 
+    def cal_loss(self, truths_train, predicts_train, truths_test, predicts_test):
+        "Use raw value to calculate loss, no need to convert to category"
+
+        if self.loss_func == "CrossEntropy":
+            loss_train = loss(ce_loss, truths_train, predicts_train)
+            loss_test = loss(ce_loss, truths_test, predicts_test)
+        elif self.loss_func == "MeanSquareError":    
+            loss_train = loss(mse_loss, truths_train, predicts_train)
+            loss_test = loss(mse_loss, truths_test, predicts_test)
+        else:
+            raise ValueError("Not supported loss function")
+        return loss_train, loss_test
+
+    
+    def get_category_by_predict(self, predicts_train, predicts_test, truths_train, truths_test):
+        
+        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+            predict_train_cat = predicts_train.argmax(axis=1, keepdims=True)
+            predict_test_cat = predicts_test.argmax(axis=1, keepdims=True)
+            onehot = True
+        elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
+            predict_train_cat = (predicts_train >= 0.5).astype(np.int32)
+            predict_test_cat = (predicts_test >= 0.5).astype(np.int32)
+            onehot = False
+        else:
+            return None, None
+
+        acc_train = accuracy_1d(truths_train, predict_train_cat, onehot)
+        acc_test = accuracy_1d(truths_test, predict_test_cat, onehot)
+        return acc_train, acc_test
+
+
+    def collect_train_record(self, epoch, loss_train, loss_test, acc_train, acc_test):
+        if loss_train < 1 and loss_test < 1:
+            self.graph_loss_train.append(loss_train)
+            self.graph_loss_test.append(loss_test)
+        self.graph_epoch.append(epoch)
+        if self.classification == True and acc_test is not None and acc_train is not None:
+            self.graph_acc_train.append(acc_train)
+            self.graph_acc_test.append(acc_test)
+
+
+    def show_train_info(self, epoch, startTime, loss_train, loss_test, acc_train, acc_test):
+        if epoch % 100 == 0:
+            time = str(datetime.now() - startTime).split(".")[0]
+            if self.classification == False:
+                print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f}  [TIME] {time}\033[?25h")
+            else:
+                print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f} [Acc_Train] {(acc_train * 100):.1f}% [Acc_Val] {(acc_test * 100):.1f}% [TIME] {time}\033[?25h")
+
+
     def show_record(self, epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation): #return a boolean to determine if training continue
         """Show and record the loss"""
 
         if epoch % 50 == 0:
             predicts_train = self.inference(inputs_train)
             predicts_test = self.inference(inputs_test)
+            
 
-            if self.loss_func == "CrossEntropy":
-                loss_train = loss(ce_loss, truths_train, predicts_train)
-                loss_test = loss(ce_loss, truths_test, predicts_test)
-            else:    
-                loss_train = loss(mse_loss, truths_train, predicts_train)
-                loss_test = loss(mse_loss, truths_test, predicts_test)
-
-            # if classification == True:
-            predicts_train = np.array(predicts_train, dtype=np.float32)
-            predicts_test = np.array(predicts_test, dtype=np.float32)
-            predict_train_class = (predicts_train >= 0.5).astype(np.int32)
-            predict_test_class = (predicts_test >= 0.5).astype(np.int32)
-            if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
-                onehot = True
-            else:
-                onehot = False
-            acc_train = accuracy_1d(truths_train, predict_train_class, onehot)
-            acc_test = accuracy_1d(truths_test, predict_test_class, onehot)
-
-
-            if loss_train < 1 and loss_test < 1:
-                self.graph_loss_train.append(loss_train)
-                self.graph_loss_test.append(loss_test)
-            self.graph_epoch.append(epoch)
+            loss_train, loss_test = self.cal_loss(truths_train, predicts_train, truths_test, predicts_test)
+            acc_train, acc_test = None, None
 
             if self.classification == True:
-                self.graph_acc_train.append(acc_train)
-                self.graph_acc_test.append(acc_test)
+                acc_train, acc_test = self.get_category_by_predict(predicts_train, predicts_test, truths_train, truths_test)
+
+            self.collect_train_record(epoch, loss_train, loss_test, acc_train, acc_test)
 
             if animation != "none" and epoch % 50 == 0:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
-            if epoch % 100 == 0:
-                time = str(datetime.now() - startTime).split(".")[0]
-                if self.classification == False:
-                    print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f}  [TIME] {time}\033[?25h")
-                else:
-                    print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f} [Acc_Train] {(acc_train * 100):.1f}% [Acc_Val] {(acc_test * 100):.1f}% [TIME] {time}\033[?25h")
+            
+            self.show_train_info(epoch, startTime, loss_train, loss_test, acc_train, acc_test)
 
+            # Early stop --------------------------------------
             if self.loss_train  is not None and self.loss_test is not None:
                 if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
                     return True
+            # Early stop --------------------------------------
             self.loss_train = loss_train
             self.loss_test = loss_test
         return False
