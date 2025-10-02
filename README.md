@@ -12,9 +12,6 @@ bash venv.sh
 source venv/bin/activate
 ```
 
-Note: The projects were developed on linux (ubuntu).
-If you are using WSL, some visualization scripts may not work properly due to the lack of GUI support.
-
 
 ## 📌 Projects
 

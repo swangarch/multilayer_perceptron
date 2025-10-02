@@ -1,6 +1,6 @@
 from numpy import ndarray as array
 import numpy as np
-
+import sys
 
 def create_bias(net_shape:tuple, value):
     """Create bias for given network shape."""
@@ -86,8 +86,10 @@ def ce_loss(truth: array, predict: array):
 def accuracy_1d(truth: array, predict: array, onehot: bool):
     """"""
 
-    if onehot == True:
-        predict = np.argmax(predict, axis=1, keepdims=True)
+    # print(predict.shape)
+    # sys.exit(1)
+    # if onehot == True:
+    #     predict = np.argmax(predict, axis=1, keepdims=True)
 
     truth_flat = truth.reshape(-1)
     predict_flat = predict.reshape(-1)

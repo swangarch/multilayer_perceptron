@@ -57,14 +57,6 @@ class NN:
     def train_batch(self, inputs, truths, learning_rate=0.01):
         """Train a batch."""
 
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
-            batch_size = truths.shape[0]
-            num_classes = self.net_shape[-1]
-            onehot = np.zeros((batch_size, num_classes))
-            onehotindex = truths[:,0].astype(int)
-            onehot[np.arange(batch_size), onehotindex] = 1
-            truths = onehot
-
         inputs_batch = inputs.T   # (batch_size, features) -> (features, batch_size)
         truths_batch = truths.T
 
@@ -91,10 +83,7 @@ class NN:
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------
-        # print("Before:", np.linalg.norm(self.nets[0]))
         gradient_descent(self.nets, self.biases, Wgrads[::-1], Bgrads[::-1], learning_rate)
-        # print("After:", np.linalg.norm(self.nets[0]))
-        # sys.exit(1)
 
 
     def inference(self, inputs):
@@ -104,6 +93,18 @@ class NN:
         for i in range(self.len_nets):
             activ = forward_layer(self.nets[i], activ, self.biases[i], self.activ_funcs[i])
         return activ.T
+    
+
+    def convert_to_onehot(self, array):  # array => (batchsize, category)
+        # print("a before", array.shape)
+        batch_size = array.shape[0]
+        num_classes = self.net_shape[-1]
+        onehot = np.zeros((batch_size, num_classes))
+        onehotindex = array[:,0].astype(int)
+        onehot[np.arange(batch_size), onehotindex] = 1
+        array = onehot
+        # print("a after", array.shape)
+        return array
 
 
     def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=50, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
@@ -113,6 +114,11 @@ class NN:
         self.prepare(visualize, threshold)
 
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
+
+        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+            truths_test = self.convert_to_onehot(truths_test)
+            truths_train = self.convert_to_onehot(truths_train)
+
         startTime = datetime.now()
         try:
             for epoch in range(max_iter):
@@ -175,11 +181,14 @@ class NN:
         plt.savefig("visualize/prediction.png", dpi=300, bbox_inches='tight')
         plt.close()
         if self.classification == True:
-            test_result = [ (arr > 0.5).astype(int) for arr in test_result ]
+            if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+                test_result = np.argmax(test_result, axis=1, keepdims=True)
+            elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
+                test_result = [ (arr > 0.5).astype(int) for arr in test_result ]
             count = 0
             l = len(test_result)
             for i in range(len(test_result)):
-                if test_result[i][:] == test_truths[i][:]:
+                if test_result[i] == test_truths[i]:
                     count += 1
             print(f"[Test Acc] {(count / l) * 100:.2f}%")
         with open("predictions.json", "w", encoding="utf-8") as f:
@@ -230,6 +239,7 @@ class NN:
     
     def get_category_by_predict(self, predicts_train, predicts_test, truths_train, truths_test):
         
+        # print(predicts_train.shape)
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
             predict_train_cat = predicts_train.argmax(axis=1, keepdims=True)
             predict_test_cat = predicts_test.argmax(axis=1, keepdims=True)
@@ -240,9 +250,20 @@ class NN:
             onehot = False
         else:
             return None, None
+        
+        # print("------------------------")
+        # print(predict_train_cat.shape)
+        # print(predict_test_cat.shape)
 
-        acc_train = accuracy_1d(truths_train, predict_train_cat, onehot)
-        acc_test = accuracy_1d(truths_test, predict_test_cat, onehot)
+        truths_train_original = np.argmax(truths_train, axis=1, keepdims=True)
+        truths_test_original = np.argmax(truths_test, axis=1, keepdims=True)
+
+        # print(truths_train.shape)
+        # print(truths_test.shape)
+        # print("------------------------")
+
+        acc_train = accuracy_1d(truths_train_original, predict_train_cat, onehot)
+        acc_test = accuracy_1d(truths_test_original, predict_test_cat, onehot)
         return acc_train, acc_test
 
 
