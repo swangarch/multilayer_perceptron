@@ -52,7 +52,7 @@ We recommand you to use --help option before the first usage.
 
 An json config file to pass network structure and training configuration is required.
 
-```json
+```
       {
           "shape": [784, 64, 32, 10],  
           // Network shape, number of neurons in each layer
@@ -131,7 +131,7 @@ The program will:
 ### Demo
 The example graph on both classification and regression.
 
-![Demo](visualization/3_nn/demo.png)
+![Demo](visualization/nn/demo.png)
 
 
 ### Datasets
@@ -149,20 +149,20 @@ The remaining 30 numerical features describe various characteristics of a cell n
 
 It is split into two parts: one for training and validation one for testing.
 
-```python
+```bash
 python mlp.py -s config/data-softmax.json data/data.csv
 ```
 
 The objective is to build a classification algorithm that predicts whether a tumor is malignant or benign based on the given features.
 
 #### To train
-```python
+```bash
 python mlp.py -t config/data-softmax.json data/train.csv (params.json)
 ```
 Not if params.json is provided, the program will perform fine tuning.
 
 #### To test
-```python
+```bash
 python mlp.py -p config/data-softmax.json data/test.csv params.json
 ```
 
@@ -171,8 +171,8 @@ This dataset support both BCE and CCE, if data-sigmoid.json is used, it will per
 The program will perform prediction, an accuracy will be calculated and prediction will be saved in predictions.json.
 
 #### All datasets and configurations provided
-- 0-1.csv _____ 0-1.json => 0 to 1 hand wirte digits recognition with BCE 
-- 0-9.csv _____ 0-9.json => 0 to 9 hand wirte digits recognition with CCE
+- 0-1.csv _____ 0-1.json => 0 to 1 hand wirte digits recognition with BCE loss
+- 0-9.csv _____ 0-9.json => 0 to 9 hand wirte digits recognition with CCE loss
 - --gen-data1d _____ regre-relu.json => 1d random generated data with RELU activation and MSE loss
 - --gen-data1d _____ regre-sigmoid.json => 1d random generated data with Sigmoid activation and MSE loss
 
@@ -202,7 +202,7 @@ def main():
         nn.train(inputs, truths, 10000, 0.005, batch_size=20, animation="plot")
 
         # Test with new data
-        nn.test(inputs, truths, test_inputs, test_truths)
+        nn.test(test_inputs, test_truths)
 
         # Save graphs
         nn.save_plots()
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
 The figure shows that neural networks are capable of learning non-linear patterns from different datasets and can generalize beyond the training data, making them applicable to a wide range of tasks.
 
-![Regression demo](visualization/3_nn/prediction.jpg)
+![Regression demo](visualization/nn/prediction.jpg)
 
 ---
 
