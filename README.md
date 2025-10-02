@@ -106,7 +106,7 @@ An json config file to pass network structure and training configuration is requ
 
         -p:  Test on a test dataset, if params.json is provided, it performs prediction based on trained model.
 
-        -help:  Show help messages.
+        --help:  Show help messages.
 
         -More features to come.
 
