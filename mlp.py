@@ -80,6 +80,7 @@ def mlp_create_nn(argv):
     conf = conf_parser(argv[2])
     if conf is None:
         sys.exit(1)
+    np.random.seed(conf["seed"])
     nn = NN(conf["shape"], get_activation_funcs_by_name(conf["activation_funcs"]), 
             conf["weights_init"],
             classification=conf["classification"],
@@ -99,7 +100,6 @@ def main():
             mlp_splitdata(argv[2], argv[3], 0.8)
         elif len(argv) == 4 or len(argv) == 5:
             nn, inputs, truths, conf = mlp_create_nn(argv)
-            np.random.seed(conf["seed"])
             if argv[1] == "-t":
                 mlp_train(nn, conf, inputs, truths)
             elif argv[1] == "-p":
