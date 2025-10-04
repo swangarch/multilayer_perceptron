@@ -194,7 +194,7 @@ def main():
         weights_init = ("he", "he", "he")  # Define the weights initialization methods
 
         # Initialize neural network
-        nn = NN(net_shape, activation_funcs)
+        nn = NN(net_shape, activation_funcs, weights_init)
 
         # Generate training data
         inputs, truths = generate_data_rand(142, 500, 0.02)

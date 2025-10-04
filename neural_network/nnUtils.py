@@ -1,8 +1,10 @@
+#!/usr/bin/python3
+
 from numpy import ndarray as array
 import numpy as np
-import sys
 
-def create_bias(net_shape:tuple, value):
+
+def create_bias(net_shape: tuple, value: int | float) -> list:
     """Create bias for given network shape."""
 
     biases = []
@@ -11,7 +13,7 @@ def create_bias(net_shape:tuple, value):
     return biases
 
 
-def create_actives(net_shape:tuple, value):
+def create_actives(net_shape:tuple, value: int | float) -> list: 
     """Create bias for given network shape."""
 
     actives = []
@@ -20,7 +22,7 @@ def create_actives(net_shape:tuple, value):
     return actives
 
 
-def forward_layer(weights:array, activations:array, biases:array, activ_func):
+def forward_layer(weights:array, activations:array, biases:array, activ_func: callable) -> array:
     """Perform layer forwarding."""
 
     res = weights @ activations + biases
@@ -30,7 +32,7 @@ def forward_layer(weights:array, activations:array, biases:array, activ_func):
         return activ_func(res)
 
 
-def init_matrix(shapes: tuple, init_method: tuple):
+def init_matrix(shapes: tuple, init_method: tuple) -> list:
     """Init matrix in given shapes."""
 
     matrixs = []
@@ -45,7 +47,7 @@ def init_matrix(shapes: tuple, init_method: tuple):
     return matrixs
 
 
-def network(net: tuple, init_method: tuple):
+def network(net: tuple, init_method: tuple) -> list:
     """Init network weights."""
 
     return init_matrix(net, init_method)
@@ -71,6 +73,7 @@ def mse_loss(truth: array, predict: array):
 
     return 0.5 * np.mean((truth - predict) ** 2)
 
+
 def ce_loss(truth: array, predict: array):
     """Calculate cross entropy loss."""
 
@@ -80,7 +83,7 @@ def ce_loss(truth: array, predict: array):
 
 
 def accuracy_1d(truth: array, predict: array):
-    """"""
+    """Calculate the accuracy, based on truth and prediction, output the raw value from neural network."""
 
     truth_flat = truth.reshape(-1)
     predict_flat = predict.reshape(-1)
@@ -90,7 +93,7 @@ def accuracy_1d(truth: array, predict: array):
 
 
 def shuffle_data(inputs, truths):
-    """Random shuffle the inputs and outputs data"""
+    """Random shuffle the inputs and outputs data."""
 
     indices = np.arange(len(inputs))
     np.random.shuffle(indices)
@@ -100,7 +103,9 @@ def shuffle_data(inputs, truths):
 
 
 def split_dataset(inputs, truths, ratio=0.8):
-    inputs, truths = shuffle_data(inputs, truths) #random shuffle
+    """Split inputs and truths data into training set and test set"""
+
+    inputs, truths = shuffle_data(inputs, truths)
     num_data = len(inputs)
     inputs_train = inputs[: int(num_data * ratio) - 1]
     truths_train = truths[: int(num_data * ratio) - 1]

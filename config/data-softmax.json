@@ -4,6 +4,7 @@
     "weights_init": ["he", "he", "he"],
     "loss": "CrossEntropy",
     "max_epoch": 10000,
+    "seed": 132,
     "learning_rate": 0.005,
     "batch_size": 100,
     "classification": true,

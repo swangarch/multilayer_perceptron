@@ -1,11 +1,15 @@
 #!/usr/bin/python3
 
+from numpy import ndarray as array
+import numpy as np
 from neural_network import NN,  get_activation_funcs_by_name
 from data_process import load, preprocess_data, conf_parser, generate_data_rand
 import sys
 
 
-def print_help():
+def print_help() -> None:
+    """Show help messages."""
+
     print("-----------------------------------------------------------------------------------------------------------------")
     print("Multilayer perceptron")
     print("Usage:")
@@ -21,7 +25,9 @@ def print_help():
     print("-----------------------------------------------------------------------------------------------------------------")
 
 
-def mlp_train(nn, conf, inputs, truths):
+def mlp_train(nn: NN, conf: dict, inputs: array, truths: array) -> None:
+    """Train a model with traing data and configuration."""
+
     nn.train(inputs, truths, 
              conf["max_epoch"], 
              conf["learning_rate"], 
@@ -32,7 +38,9 @@ def mlp_train(nn, conf, inputs, truths):
     nn.save_plots()
 
 
-def mlp_getdata(source, conf):
+def mlp_getdata(source: str, conf: dict) -> tuple:
+    """Get data either from input dataset file or from internal options."""
+
     if source == "--gen-data1d":
         inputs, truths = generate_data_rand(142, 500, 0.02)
     else:
@@ -43,12 +51,16 @@ def mlp_getdata(source, conf):
     return inputs, truths
 
 
-def mlp_splitdata(config_file, file, seed, ratio=0.8):
+def mlp_splitdata(config_file, file, ratio:float=0.8) -> None:
+    """Split dataset into 2 parts, training data and test / validation data."""
+
     print(config_file)
     conf = conf_parser(config_file)
     df = load(file, conf["index"])
     if df is None:
         sys.exit(1)
+
+    seed = conf["seed"]
 
     df_shuffled = df.sample(frac=1, random_state=seed).reset_index(drop=True)
     l = len(df_shuffled)
@@ -63,6 +75,8 @@ def mlp_splitdata(config_file, file, seed, ratio=0.8):
 
 
 def mlp_create_nn(argv):
+    """Initialize neural network instance."""
+
     conf = conf_parser(argv[2])
     if conf is None:
         sys.exit(1)
@@ -82,9 +96,10 @@ def main():
         if len(argv) == 1 or ((len(argv) == 2 and argv[1] == "--help")):
             print_help()
         elif argv[1] == "-s" and len(argv) == 4:
-            mlp_splitdata(argv[2], argv[3], 132, 0.8)
+            mlp_splitdata(argv[2], argv[3], 0.8)
         elif len(argv) == 4 or len(argv) == 5:
             nn, inputs, truths, conf = mlp_create_nn(argv)
+            np.random.seed(conf["seed"])
             if argv[1] == "-t":
                 mlp_train(nn, conf, inputs, truths)
             elif argv[1] == "-p":

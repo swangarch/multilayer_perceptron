@@ -1,9 +1,11 @@
+#!/usr/bin/python3
+
 import numpy as np
 import math
 
 
 def generate_data_rand(seed, number, noise_scale=0.2):
-    """Generate 1d data based on case 5 with added random noise."""
+    """Generate 1d data with added random noise."""
 
     np.random.seed(seed)
     inputs = []

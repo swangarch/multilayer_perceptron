@@ -4,6 +4,7 @@
     "weights_init": ["he", "he", "he"],
     "loss": "MeanSquareError",
     "max_epoch": 12000,
+    "seed": 132,
     "learning_rate": 0.005,
     "batch_size": 100,
     "classification": false,

@@ -6,6 +6,8 @@ import os
 
 
 def convert_to_float(type_name:str):
+    """Convert labels to number."""
+
     if type_name == "M" or type_name=="1" or type_name == "1.0":
         return 1.0
     elif type_name == "B" or type_name=="0" or type_name == "0.0":
@@ -14,8 +16,9 @@ def convert_to_float(type_name:str):
         return type_name
 
 
-
 def preprocess_data(df):
+    """Preprocess data set to prepare inputs and label truths."""
+
     df.iloc[:, 0] = df.iloc[:, 0].apply(convert_to_float)
     data = np.array(df).astype(np.float32)
 
@@ -28,7 +31,6 @@ def preprocess_data(df):
     X_max = inputs.max(axis=0)
     inputs_norm = (inputs - X_min) / (X_max - X_min + 1e-8)
 
-    # make sigle data always in a shape of column
     truths = truths[:, np.newaxis]     # (N,V)
     inputs = inputs_norm[:, :]          # (N,M)
 

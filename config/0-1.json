@@ -3,6 +3,7 @@
     "activation_funcs": ["relu", "relu", "relu", "sigmoid"],
     "weights_init": ["he", "he", "he", "xavier"],
     "max_epoch": 1000,
+    "seed": 132,
     "loss": "CrossEntropy",
     "learning_rate": 0.0005,
     "batch_size": 500,

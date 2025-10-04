@@ -1,8 +1,11 @@
+#!/usr/bin/python3
+
 import json
-import sys
 
 
-def wrong_type(conf, field, field_type, mandatory:bool):
+def wrong_type(conf:dict, field: str, field_type: type, mandatory:bool) -> bool:
+    """Check if a filed in configuration file has right type"""
+    
     if mandatory and not field in conf:
         raise ValueError("Missing mandatory field.")
     if field in conf and isinstance(conf[field], field_type):
@@ -12,11 +15,15 @@ def wrong_type(conf, field, field_type, mandatory:bool):
 
 
 def check_arg_type(conf: dict) -> bool:
+    """Check argument type in json configuration file"""
+
     if wrong_type(conf, "shape", (list,tuple), True):
         return False
     elif wrong_type(conf, "activation_funcs", (list,tuple), True):
         return False
     elif wrong_type(conf, "weights_init", (list,tuple), True):
+        return False
+    elif wrong_type(conf, "seed", int, True):
         return False
     elif wrong_type(conf, "loss", str, True):
         return False
@@ -40,6 +47,8 @@ def check_arg_type(conf: dict) -> bool:
 
 
 def valid_net_struct(conf: dict) -> bool:
+    """Check if the neural network has valid structure."""
+
     shape = conf["shape"]
     activ_funcs = conf["activation_funcs"]
     loss = conf["loss"]
@@ -53,7 +62,7 @@ def valid_net_struct(conf: dict) -> bool:
         if not isinstance(num, int) or num < 1:
             raise ValueError("Wrong layer neuron numbers")
     for act in activ_funcs:
-        if act not in ["relu", "sigmoid", "leaky_relu", "gelu", "softmax", "none"]:
+        if act not in ["relu", "sigmoid", "leaky_relu", "softmax", "none"]:
             raise ValueError("Wrong activation funcion")
     if loss not in ["CrossEntropy", "MeanSquareError"]:
         raise ValueError("Wrong loss function")
@@ -65,21 +74,40 @@ def valid_net_struct(conf: dict) -> bool:
             raise ValueError("Not supported initialization method")
     if len(init) != len(activ_funcs):
         raise ValueError("Wrong initialization method numbers")
-
     return True
 
 
+def check_arg_value(conf: dict) -> bool:
+    """Check configuration value."""
+
+    if conf["max_epoch"] <= 0:
+        raise ValueError("Max epoch must be positive")
+    if conf["learning_rate"] <= 0:
+        raise ValueError("Learning rate must be positive")
+    if conf["batch_size"] <= 0:
+        raise ValueError("Batch size must be positive")
+    if conf["train_ratio"] <= 0 or conf["train_ratio"] >= 1:
+        raise ValueError("Invalid train ratio")
+    if conf["seed"] <= 0:
+        raise ValueError("Invalid seed.")
+
+
 def is_valid_config(conf: dict) -> bool:
+    """Check if configuration file is correct."""
+
     if check_arg_type(conf) == False:
         return False
     if valid_net_struct(conf) == False:
         return False
+    check_arg_value(conf)
     if conf["animation"] != "none" and conf["animation"] != "scatter" and conf["animation"] != "plot":
         raise ValueError("Wrong animation type")
     return True
 
 
 def conf_parser(config: str):
+    """Parse the configuration file and check errors."""
+
     try:
         with open(config, mode='r') as conf_data:
             conf = json.load(conf_data)
@@ -99,11 +127,11 @@ def conf_parser(config: str):
         return None
 
 
-def main():
-    conf = conf_parser(sys.argv[1])
-    if conf is None:
-        sys.exit(1)
+# def main():
+#     conf = conf_parser(sys.argv[1])
+#     if conf is None:
+#         sys.exit(1)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

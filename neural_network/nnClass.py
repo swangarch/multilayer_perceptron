@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import numpy as np
 from .activation_func import *
 from .nnUtils import *
@@ -9,10 +11,10 @@ import sys
 
 
 class NN:
-    """Neural network class, which can perform training and prediction"""
+    """Neural network class, which can perform training and prediction for both classification and regression tasks."""
 
     def __init__(self, shape, activation_functions, init_methods, classification=False, loss="MeanSquareError"):
-        """Init a multi layer perceptron."""
+        """Init a multilayer perceptron."""
         
         if len(shape) < 4:
             raise ValueError("Net shape too short.")
@@ -36,14 +38,16 @@ class NN:
         self.graph_acc_test = []
         self.graph_epoch = []
 
-        self.loss_threshold = 0.000000001
+        self.loss_threshold = 0.000001
         self.loss_test = None
         self.loss_train = None
         self.plt = plt
 
-        self.deriv_map = dict()
-        self.deriv_map[relu] = relu_deriv
-        self.deriv_map[sigmoid] = sigmoid_deriv
+        self.deriv_map = {
+            relu: relu_deriv,
+            sigmoid: sigmoid_deriv,
+            leaky_relu: leaky_relu_deriv
+        }
         self.classification = classification
 
 
@@ -55,7 +59,10 @@ class NN:
 
 
     def train_batch(self, inputs, truths, learning_rate=0.01):
-        """Train a batch."""
+        """Train a batch, the inputs and truths have to be already chunked into batch.
+        This function will perform feed foward, back probagation, and gradient descent,
+        the process to train the model.
+        """
 
         inputs_batch = inputs.T   # (batch_size, features) -> (features, batch_size)
         truths_batch = truths.T
@@ -76,8 +83,8 @@ class NN:
         Wgrads.append(local_grad @ actives[-2].T / len(inputs))
     
         for i in range(self.len_nets - 1, 0, -1):
-            loss_prev_layer = self.nets[i].T @ local_grad  #cal the loss of prev layer
-            local_grad = loss_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], self.deriv_map) 
+            grad_prev_layer = self.nets[i].T @ local_grad  #cal the loss of prev layer
+            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], self.deriv_map) 
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------
@@ -85,7 +92,8 @@ class NN:
 
 
     def inference(self, inputs):
-        """After training, use weights to do inference."""
+        """After training, use weights to do inference. The result will be raw from neural network.
+        If onehot encoding and softmax is applied, the category will need post argmax."""
 
         activ = inputs.T
         for i in range(self.len_nets):
@@ -93,7 +101,9 @@ class NN:
         return activ.T
     
 
-    def convert_to_onehot(self, array):  # array => (batchsize, category)
+    def convert_to_onehot(self, array):  # array -> (batchsize, category)
+        """Convert the category to onehot encoding format, to adapt softmax multi categories classification."""
+
         batch_size = array.shape[0]
         num_classes = self.net_shape[-1]
         onehot = np.zeros((batch_size, num_classes))
@@ -104,7 +114,7 @@ class NN:
 
 
     def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=50, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
-        """Train a dataset."""
+        """Train a dataset, it will first chunk dataset into mini-batches, if batch_size is 1, it will perfom SGD."""
 
         self.check_train_params(inputs, truths)
         self.prepare(visualize, threshold)
@@ -138,6 +148,8 @@ class NN:
 
 
     def load_weights(self, file):
+        """Load weights from a params.json file, in order to predict with a trained model, or continue the fine tuning."""
+
         if file is None:
             return
         with open(file, mode="r") as f:
@@ -153,6 +165,8 @@ class NN:
 
 
     def save_weights(self):
+        """Save training weights into a params.json file."""
+
         weights_li = [ arr.tolist() for arr in self.nets ]
         biases_li = [ arr.tolist() for arr in self.biases ]
         model_params = {
@@ -165,7 +179,9 @@ class NN:
 
 
     def test(self, test_inputs, test_truths):
-        """Test for a new dataset."""
+        """Test for a dataset, if is classification task, the program will check last layer activation function
+        to determine if CCE or BCE is applied, and convert onehot encoding to actual category if softmax is provided."""
+
         test_result = self.inference(test_inputs)
         plt.scatter(test_inputs[:, 0], np.array(test_truths)[:, 0], c="blue", label="Test truth", s=0.5)
         plt.scatter(test_inputs[:, 0], np.array(test_result)[:, 0], c="red", label="Test prediction", s=0.5)
@@ -189,7 +205,7 @@ class NN:
 
 
     def test_animation(self, test_inputs, test_truths, animation):
-        """Test for a new dataset."""
+        """Test for a dataset, and show the animation."""
 
         test_result = self.inference(test_inputs)
         self.plt.clf()
@@ -217,7 +233,7 @@ class NN:
 
 
     def cal_loss(self, truths_train, predicts_train, truths_test, predicts_test):
-        "Use raw value to calculate loss, no need to convert to category"
+        "Use raw value to calculate loss, no need to convert to category."
 
         if self.loss_func == "CrossEntropy":
             loss_train = loss(ce_loss, truths_train, predicts_train)
@@ -231,7 +247,8 @@ class NN:
 
     
     def get_category_by_predict(self, predicts_train, predicts_test, truths_train, truths_test):
-        
+        """Get category by the output prediction of neural network."""
+
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
             predict_train_cat = predicts_train.argmax(axis=1, keepdims=True)
             predict_test_cat = predicts_test.argmax(axis=1, keepdims=True)
@@ -251,6 +268,8 @@ class NN:
 
 
     def collect_train_record(self, epoch, loss_train, loss_test, acc_train, acc_test):
+        """Collect training history to show and draw the plots."""
+
         self.graph_loss_train.append(loss_train)
         self.graph_loss_test.append(loss_test)
         self.graph_epoch.append(epoch)
@@ -260,6 +279,8 @@ class NN:
 
 
     def show_train_info(self, epoch, startTime, loss_train, loss_test, acc_train, acc_test):
+        """Show training info during the training process."""
+
         if epoch % 100 == 0:
             time = str(datetime.now() - startTime).split(".")[0]
             if self.classification == False:
@@ -269,7 +290,7 @@ class NN:
 
 
     def show_record(self, epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation): #return a boolean to determine if training continue
-        """Show and record the loss"""
+        """Show and record the loss."""
 
         if epoch % 50 == 0:
             predicts_train = self.inference(inputs_train)
@@ -297,7 +318,7 @@ class NN:
 
 
     def save_plots(self):
-        """Show loss func."""
+        """Show loss func plots and if classification is applied show also accuracy."""
 
         plt.plot(self.graph_epoch, self.graph_loss_train, c="cyan", lw=1, label="Training loss")
         plt.plot(self.graph_epoch, self.graph_loss_test, c="orange", linestyle="--", lw=1, label="Test loss")
@@ -322,7 +343,7 @@ class NN:
 
 
     def prepare(self, visualize, threshold):
-        """Create plt scatter."""
+        """Create folder to save training result."""
 
         if visualize == True:
             os.makedirs("visualize", exist_ok=True)
