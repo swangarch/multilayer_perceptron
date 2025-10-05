@@ -20,6 +20,8 @@ Multilayer perceptron is implemented as an class in Python,
 capable of solving both regression and classification tasks.  
 The design goal is to provide a reusable and modular implementation.
 
+[[Demo Video]](https://www.youtube.com/watch?v=YRcl1f--tcw)
+
 ### Features
 
 - Algorithm from **scratch** → implemented without high-level ML libraries, only using NumPy for matrix operations.
