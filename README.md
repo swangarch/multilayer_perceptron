@@ -1,8 +1,6 @@
 # Multilayer Perceptron
 
-## Project
-
-### Requirements
+## Requirements
 
 These projects is built from scratch with Python, with Numpy, Pandas, Matplotlib..  
 
@@ -16,7 +14,7 @@ bash venv.sh
 source venv/bin/activate
 ```
 
-### Multilayer perceptron
+## Multilayer perceptron
 
 Multilayer perceptron is implemented as an class in Python,  
 capable of solving both regression and classification tasks.  
@@ -43,10 +41,88 @@ The design goal is to provide a reusable and modular implementation.
 
 - Support Fine-tuning: continue training from saved weights for further optimization
   
+### Methodology
 
-### Programs 
+![Demo](visualization/diagram/mlp.jpg)
 
-#### Configuration
+A **Multilayer Perceptron (MLP)** is a basic type of artificial neural network that learns to map input data to the correct output by adjusting internal parameters called weights and biases. It is composed of multiple layers of artificial neurons, where each neuron performs a simple computation — combining inputs, applying weights, adding a bias, and passing the result through an activation function.
+
+- An artificial neuron is the fundamental unit of a neural network. It receives input values, multiplies each by a corresponding weight, adds a bias term, and then applies an activation function to introduce non-linearity.
+
+
+- When neurons are grouped into a layer, their computations can be efficiently expressed using **matrix multiplication**. This allows the model to process many neurons at once, using vectorized operations in NumPy. Each layer's output becomes the input to the next layer, forming a feedforward chain that passes information through the network.
+
+
+- Together, these concepts form the mathematical foundation of neural networks — combining linear algebra, non-linear activation, and iterative optimization to learn from data.
+
+### Learning Process
+The learning process consists of three main stages:
+
+- **Feedforward** — compute predictions by passing data through all layers.
+- **Backpropagation** — calculate gradients of the loss with respect to the weights, using chain rule.
+- **Gradient Descent** — update weights and biases to minimize the loss over time.
+
+Through **repeated iterations** of these steps, the MLP gradually improves its predictions and learns to generalize from the training data.
+
+### Feedfoward
+![Demo](visualization/diagram/feedforward.jpg)
+
+In the feedforward step, the input data passes through several layers of neurons. Each neuron performs a weighted sum of its inputs, adds a bias, and then applies an activation function such as ReLU, Sigmoid, or Softmax.
+
+$$Z=WX+b$$
+
+$$A=f(Z)$$
+
+The final layer produces the output — either a value (for regression) or class probabilities (for classification).
+
+### Back probagation
+![Demo](visualization/diagram/back_probagation.jpg)
+
+In backpropagation, the model calculates how far its predictions are from the correct answers using a loss function (like MSE or Cross-Entropy). Then, it computes the gradient of this loss with respect to each weight using the chain rule. This process tells the model which direction each weight should move to reduce the overall error.
+
+For the output layer, the gradient simplification is elegant:
+
+**MSE Regression**: The output layer typically uses no activation function (linear output). The gradient of the loss with respect to the output is:
+
+$$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y$$
+
+**Cross-Entropy Classification**: The output layer uses Softmax (multi-class) or Sigmoid (binary) activation. Remarkably, when combined with cross-entropy loss, the gradient simplifies to the same form:
+
+$$\frac{\partial L}{\partial z} = \hat{y} - y$$
+
+
+This mathematical convenience makes backpropagation efficient for both regression and classification tasks.
+
+
+
+### Gradient descent
+![Demo](visualization/diagram/gradient_descent.jpg)
+
+Gradient descent is the optimization process that updates the weights.
+It moves the weights in the direction that reduces the loss the most, step by step.
+
+$$
+\theta_j := \theta_j - \alpha \frac{\partial J}{\partial \theta_j}
+$$
+
+The learning rate controls how big each step is — too high can make learning unstable, too low can make it too slow.
+
+There are two main modes implemented in this project:
+
+Stochastic Gradient Descent (SGD): updates weights for each training sample.
+
+Mini-batch Gradient Descent: updates weights after a small batch of samples, balancing speed and stability.
+
+### Non linear classification example
+
+![Demo](visualization/diagram/classification.jpg)
+
+This example shows how an MLP can separate data that is not linearly separable — for instance, when data points form circular or spiral patterns.
+With multiple layers and non-linear activations, the network learns complex boundaries that a simple linear model cannot.
+
+## Programs 
+
+### Configuration
 
 We recommand you to use --help option before the first usage.
 
@@ -91,7 +167,7 @@ An json config file to pass network structure and training configuration is requ
           // Whether the input CSV file contains an index column
       }
 ```
-#### Train and predict
+### Train and predict
 
 ```
       Usage:
@@ -145,7 +221,7 @@ B → Benign (non-cancerous)
 
 The remaining 30 numerical features describe various characteristics of a cell nucleus extracted with fine-needle aspiration (FNA), such as radius, texture, perimeter, area, and smoothness. These measurements are widely used for early breast cancer detection.
 
-#### To split data into train.csv and test.csv:
+### To split data into train.csv and test.csv:
 
 It is split into two parts: one for training and validation one for testing.
 
