@@ -1,8 +1,13 @@
 # Multilayer Perceptron
 
+Multilayer perceptron (MLP) is a simple neural network (NN), can solve both regression and classification tasks. The project provides a reusable and modular implementation.
+
+[[Demo Video]](https://www.youtube.com/watch?v=YRcl1f--tcw)
+
 ## Requirements
 
-These projects is built from scratch with Python, with Numpy, Pandas, Matplotlib..  
+These projects is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
+without high-level ML libraries.
 
 A `venv.sh` and `requirements.txt` to help you set up a virtual environment and install the necessary packages:
 
@@ -14,54 +19,36 @@ bash venv.sh
 source venv/bin/activate
 ```
 
-## Multilayer perceptron
+## Features
 
-Multilayer perceptron is implemented as an class in Python,  
-capable of solving both regression and classification tasks.  
-The design goal is to provide a reusable and modular implementation.
+- Training methods → supports **Stochastic Gradient Descent (SGD)** and **mini-batch training**.
 
-[[Demo Video]](https://www.youtube.com/watch?v=YRcl1f--tcw)
+- **Visualization** → includes real-time animations to track the learning process.
 
-### Features
+- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc.
 
-- Algorithm from **scratch** → implemented without high-level ML libraries, only using NumPy for matrix operations.
+- Data handling → built-in data loading and preprocessing.
 
-- Training methods → supports Stochastic Gradient Descent (SGD) and mini-batch training.
-
-- Visualization → includes real-time animations to track the learning process.
-
-- Configurable architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc.
-
-- Data handling → built-in data loading and preprocessing pipeline.
-
-- Support multiple activation functions: ReLU, Sigmoid, Softmax, Leaky ReLU
+- Support multiple activation functions: **ReLU, Sigmoid, Softmax, Leaky ReLU**
 
 - Support multiple loss functions: 
-  - Categorical Cross Entropy (CCE) with automatic one-hot encoding for categorical labels
-  - Binary Cross Entropy (BCE)
-  - Mean Squared Error (MSE)
+  - **Categorical Cross Entropy (CCE)** with automatic one-hot encoding for categorical labels
+  - **Binary Cross Entropy (BCE)**
+  - **Mean Squared Error (MSE)**
 
-- Support Fine-tuning: continue training from saved weights for further optimization
+- Support **Fine-tuning**: continue training from saved weights for further optimization
   
-### Methodology
+## Methodology
 
 ![Demo](visualization/diagram/mlp.jpg)
 
-A **Multilayer Perceptron (MLP)** is a basic type of artificial neural network that learns to map input data to the correct output by adjusting internal parameters called weights and biases. It is composed of multiple layers of artificial neurons, where each neuron performs a simple computation — combining inputs, applying weights, adding a bias, and passing the result through an activation function.
-
-- An artificial neuron is the fundamental unit of a neural network. It receives input values, multiplies each by a corresponding weight, adds a bias term, and then applies an activation function to introduce non-linearity.
-
-
-- When neurons are grouped into a layer, their computations can be efficiently expressed using **matrix multiplication**. This allows the model to process many neurons at once, using vectorized operations in NumPy. Each layer's output becomes the input to the next layer, forming a feedforward chain that passes information through the network.
-
-
-- Together, these concepts form the mathematical foundation of neural networks — combining linear algebra, non-linear activation, and iterative optimization to learn from data.
+A **Multilayer Perceptron** is a basic type of artificial neural network that learns to map input data to the correct output by adjusting internal parameters called weights and biases. It is composed of multiple layers of artificial neurons, where each neuron performs a simple computation — combining inputs, applying weights, adding a bias, and passing the result through an activation function to introduce non-linearity. Then using back propagation and gradient descent to find ideal weights and biases.
 
 ### Learning Process
 The learning process consists of three main stages:
 
 - **Feedforward** — compute predictions by passing data through all layers.
-- **Backpropagation** — calculate gradients of the loss with respect to the weights, using chain rule.
+- **Back propagation** — calculate gradients of the loss with respect to the weights, using chain rule.
 - **Gradient Descent** — update weights and biases to minimize the loss over time.
 
 Through **repeated iterations** of these steps, the MLP gradually improves its predictions and learns to generalize from the training data.
@@ -70,6 +57,8 @@ Through **repeated iterations** of these steps, the MLP gradually improves its p
 ![Demo](visualization/diagram/feedforward.jpg)
 
 In the feedforward step, the input data passes through several layers of neurons. Each neuron performs a weighted sum of its inputs, adds a bias, and then applies an activation function such as ReLU, Sigmoid, or Softmax.
+
+When neurons are grouped into a layer, their computations can be efficiently expressed using **matrix multiplication**. This allows the model to process many neurons at once, using vectorized operations in **NumPy**. Each layer's output becomes the input to the next layer, forming a feedforward chain that passes information through the network.
 
 $$Z=WX+b$$
 
@@ -80,7 +69,7 @@ The final layer produces the output — either a value (for regression) or class
 ### Back probagation
 ![Demo](visualization/diagram/back_probagation.jpg)
 
-In backpropagation, the model calculates how far its predictions are from the correct answers using a loss function (like MSE or Cross-Entropy). Then, it computes the gradient of this loss with respect to each weight using the chain rule. This process tells the model which direction each weight should move to reduce the overall error.
+In backpropagation, the model calculates how far its predictions are from the correct answers using a loss function (like MSE or Cross-Entropy). Then, it computes the gradient of this loss to each weight and bias using the chain rule. This process tells the model which direction each weight and bias should move to reduce the overall error.
 
 For the output layer, the gradient simplification is elegant:
 
@@ -114,15 +103,15 @@ The learning rate controls how big each step is — too high can make learning u
 
 There are two main modes implemented in this project:
 
-Stochastic Gradient Descent (SGD): updates weights for each training sample.
+**Stochastic Gradient Descent (SGD)**: updates weights for each training sample, when batch size is set to 1.
 
-Mini-batch Gradient Descent: updates weights after a small batch of samples, balancing speed and stability.
+**Mini-batch Gradient Descent**: updates weights after a small batch of samples, balancing speed and stability.
 
-### Non linear classification example
+### Non linear classification
 
 ![Demo](visualization/diagram/classification.jpg)
 
-This example shows how an MLP can separate data that is not linearly separable — for instance, when data points form circular or spiral patterns.
+This diagram shows how an MLP can separate data that is not linearly separable — for instance, when data points form circular or spiral patterns.
 With multiple layers and non-linear activations, the network learns complex boundaries that a simple linear model cannot.
 
 ## Programs 
@@ -204,7 +193,7 @@ The program will:
 
 - Visualize loss and prediction:
 
-- By default, regression task will visualize the loss, and the data  distribution for first dimension.
+- By default, regression task will visualize the loss, and the data distribution for first dimension.
 
 - In addition, classification task will add an accuracy plot.
 
@@ -226,7 +215,7 @@ B → Benign (non-cancerous)
 
 The remaining 30 numerical features describe various characteristics of a cell nucleus extracted with fine-needle aspiration (FNA), such as radius, texture, perimeter, area, and smoothness. These measurements are widely used for early breast cancer detection.
 
-### To split data into train.csv and test.csv:
+### To split data:
 
 It is split into two parts: one for training and validation one for testing.
 
@@ -234,9 +223,9 @@ It is split into two parts: one for training and validation one for testing.
 python mlp.py -s config/data-softmax.json data/data.csv
 ```
 
-The objective is to build a classification algorithm that predicts whether a tumor is malignant or benign based on the given features.
+The objective is to classify whether a tumor is malignant or benign based on the given features.
 
-#### To train
+### To train
 ```bash
 python mlp.py -t config/data-softmax.json data/train.csv (params.json)
 ```
@@ -247,19 +236,17 @@ Not if params.json is provided, the program will perform fine tuning.
 python mlp.py -p config/data-softmax.json data/test.csv params.json
 ```
 
-This dataset support both BCE and CCE, if data-sigmoid.json is used, it will perform BCE other wise CCE
+This dataset support both BCE and CCE, if data-sigmoid.json is used, it will perform BCE otherwise if data-softmax.json is used, it will perform CCE.
 
-The program will perform prediction, an accuracy will be calculated and prediction will be saved in predictions.json.
+The program will make prediction, an accuracy will be calculated and prediction will be saved in predictions.json.
 
-#### All datasets and configurations provided
+### Other datasets and configurations provided
 - 0-1.csv _____ 0-1.json => 0 to 1 hand wirte digits recognition with BCE loss
 - 0-9.csv _____ 0-9.json => 0 to 9 hand wirte digits recognition with CCE loss
 - --gen-data1d _____ regre-relu.json => 1d random generated data with RELU activation and MSE loss
 - --gen-data1d _____ regre-sigmoid.json => 1d random generated data with Sigmoid activation and MSE loss
 
 ### Class 
-
-Example: Train and Test a Neural Network
 
 Below is a simple example of using the `NN` class to train a regression model.
 
@@ -298,7 +285,7 @@ if __name__ == "__main__":
 
 ### Generalization
 
-The figure shows that neural networks are capable of learning non-linear patterns from different datasets and can generalize beyond the training data, making them applicable to a wide range of tasks.
+The figure shows that multilayer perceptron is capable of learning non-linear patterns from different datasets and can generalize beyond the training data, making them applicable to a wide range of tasks.
 
 ![Regression demo](visualization/nn/prediction.jpg)
 
