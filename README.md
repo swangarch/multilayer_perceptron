@@ -98,11 +98,14 @@ This mathematical convenience makes backpropagation efficient for both regressio
 ### Gradient descent
 ![Demo](visualization/diagram/gradient_descent.jpg)
 
-Gradient descent is the optimization process that updates the weights.
-It moves the weights in the direction that reduces the loss the most, step by step.
+Gradient descent is the optimization process that updates the weights and biases. It moves the weights and biases in the direction that reduces the loss the most, step by step.
 
 $$
-\theta_j := \theta_j - \alpha \frac{\partial J}{\partial \theta_j}
+W := W - 𝜂 \frac{\partial J}{\partial W}
+$$
+
+$$
+b := b - 𝜂 \frac{\partial J}{\partial b}
 $$
 
 The learning rate controls how big each step is — too high can make learning unstable, too low can make it too slow.
