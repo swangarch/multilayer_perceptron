@@ -231,7 +231,7 @@ python mlp.py -t config/data-softmax.json data/train.csv (params.json)
 ```
 Not if params.json is provided, the program will perform fine tuning.
 
-#### To test
+### To test
 ```bash
 python mlp.py -p config/data-softmax.json data/test.csv params.json
 ```
