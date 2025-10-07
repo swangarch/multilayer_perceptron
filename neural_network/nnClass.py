@@ -13,7 +13,7 @@ import sys
 class NN:
     """Neural network class, which can perform training and prediction for both classification and regression tasks."""
 
-    def __init__(self, shape, activation_functions, init_methods, classification=False, loss="MeanSquareError"):
+    def __init__(self, shape: list, activation_functions: list, init_methods:list, classification:bool=False, loss:str="MeanSquareError"):
         """Init a multilayer perceptron."""
         
         if len(shape) < 4:
@@ -51,14 +51,14 @@ class NN:
         self.classification = classification
 
 
-    def check_train_params(self, inputs, truths):
+    def check_train_params(self, inputs: array, truths: array) -> None:
         """Check training parameters."""
 
         if len(inputs) != len(truths):
             raise ValueError("Mismatched training dataset")
 
 
-    def train_batch(self, inputs, truths, learning_rate=0.01):
+    def train_batch(self, inputs:array, truths:array, learning_rate:float=0.01) -> None:
         """Train a batch, the inputs and truths have to be already chunked into batch.
         This function will perform feed foward, back probagation, and gradient descent,
         the process to train the model.
@@ -91,7 +91,7 @@ class NN:
         gradient_descent(self.nets, self.biases, Wgrads[::-1], Bgrads[::-1], learning_rate)
 
 
-    def inference(self, inputs):
+    def inference(self, inputs:array) -> array:
         """After training, use weights to do inference. The result will be raw from neural network.
         If onehot encoding and softmax is applied, the category will need post argmax."""
 
@@ -101,7 +101,7 @@ class NN:
         return activ.T
     
 
-    def convert_to_onehot(self, array):  # array -> (batchsize, category)
+    def convert_to_onehot(self, array:array) -> array:  # array -> (batchsize, category)
         """Convert the category to onehot encoding format, to adapt softmax multi categories classification."""
 
         batch_size = array.shape[0]
@@ -113,7 +113,7 @@ class NN:
         return array
 
 
-    def train(self, inputs, truths, max_iter=10000, learning_rate=0.01, batch_size=50, visualize=True, test_ratio = 0.8, threshold=None, animation=None):
+    def train(self, inputs: array, truths:array, max_iter:int=10000, learning_rate:float=0.01, batch_size:int=50, visualize:bool=True, test_ratio:float = 0.8, threshold:str|float=None, animation:str=None):
         """Train a dataset, it will first chunk dataset into mini-batches, if batch_size is 1, it will perfom SGD."""
 
         self.check_train_params(inputs, truths)
@@ -145,15 +145,23 @@ class NN:
         except KeyboardInterrupt:
             print("Stopped by user.\033[?25h")
         self.save_weights()
+        self.plt.close()
 
 
-    def load_weights(self, file):
+    def load_weights(self, file: str) -> None:
         """Load weights from a params.json file, in order to predict with a trained model, or continue the fine tuning."""
 
         if file is None:
             return
         with open(file, mode="r") as f:
-            params = json.load(f)    
+            params = json.load(f)
+        
+        if len(params["shape"]) != len(self.net_shape):
+            raise ValueError("Cannot load mismatched network with current configuration.")
+        for i in range(len(params["shape"])):
+            if params["shape"][i] != self.net_shape[i]:
+                raise ValueError("Cannot load mismatched network with current configuration.")
+
         ws = [np.array(w) for w in params["weights"]]
         bs = [np.array(b) for b in params["biases"]]
         for i in range(len(self.nets)):
@@ -164,12 +172,13 @@ class NN:
         self.biases = bs
 
 
-    def save_weights(self):
+    def save_weights(self) -> None:
         """Save training weights into a params.json file."""
 
         weights_li = [ arr.tolist() for arr in self.nets ]
         biases_li = [ arr.tolist() for arr in self.biases ]
         model_params = {
+            "shape": self.net_shape,
             "weights": weights_li,
             "biases": biases_li,
         }
@@ -178,7 +187,7 @@ class NN:
         print("[Params saved => (params.json)]\033[?25h")
 
 
-    def test(self, test_inputs, test_truths):
+    def test(self, test_inputs: array, test_truths: array) -> None:
         """Test for a dataset, if is classification task, the program will check last layer activation function
         to determine if CCE or BCE is applied, and convert onehot encoding to actual category if softmax is provided."""
 
@@ -190,21 +199,29 @@ class NN:
         plt.close()
         if self.classification == True:
             if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+                loss_test = loss(ce_loss, self.convert_to_onehot(test_truths), test_result) 
                 test_result = np.argmax(test_result, axis=1, keepdims=True)
             elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
+                print(test_truths.shape, test_result.shape)
+                loss_test = loss(ce_loss, test_truths, test_result)
                 test_result = [ (arr > 0.5).astype(int) for arr in test_result ]
             count = 0
             l = len(test_result)
             for i in range(len(test_result)):
                 if test_result[i] == test_truths[i]:
                     count += 1
-            print(f"[Acc_Test] {(count / l) * 100:.2f}%")
+            print(f"[Correct_Predict] [{count}/{len(test_truths)}]  [Acc_Test] {(count / l) * 100:.2f}%  [Loss] {loss_test:.4f}")
+        else:
+            if self.loss_func == "MeanSquareError":
+                print(test_truths.shape, test_result.shape)
+                loss_test = loss(mse_loss, test_truths, test_result) 
+                print(f"[Loss] {loss_test:.4f}")
         with open("predictions.json", "w", encoding="utf-8") as f:
             json.dump({"prediction": [r.tolist() for r in test_result]}, f, indent=4)
         print("[Predictions saved => (predictions.json)]\033[?25h")
 
 
-    def test_animation(self, test_inputs, test_truths, animation):
+    def test_animation(self, test_inputs:array, test_truths:array, animation:str) -> None:
         """Test for a dataset, and show the animation."""
 
         test_result = self.inference(test_inputs)
@@ -232,7 +249,7 @@ class NN:
         self.plt.clf()
 
 
-    def cal_loss(self, truths_train, predicts_train, truths_test, predicts_test):
+    def cal_loss(self, truths_train:array, predicts_train:array, truths_test:array, predicts_test:array) -> tuple:
         "Use raw value to calculate loss, no need to convert to category."
 
         if self.loss_func == "CrossEntropy":
@@ -246,7 +263,7 @@ class NN:
         return loss_train, loss_test
 
     
-    def get_category_by_predict(self, predicts_train, predicts_test, truths_train, truths_test):
+    def get_category_by_predict(self, predicts_train:array, predicts_test:array, truths_train:array, truths_test:array) -> tuple:
         """Get category by the output prediction of neural network."""
 
         if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
@@ -267,7 +284,7 @@ class NN:
         return acc_train, acc_test
 
 
-    def collect_train_record(self, epoch, loss_train, loss_test, acc_train, acc_test):
+    def collect_train_record(self, epoch: int, loss_train: float, loss_test:float, acc_train:float, acc_test:float) -> None:
         """Collect training history to show and draw the plots."""
 
         self.graph_loss_train.append(loss_train)
@@ -278,7 +295,7 @@ class NN:
             self.graph_acc_test.append(acc_test)
 
 
-    def show_train_info(self, epoch, startTime, loss_train, loss_test, acc_train, acc_test):
+    def show_train_info(self, epoch:int, startTime:datetime, loss_train:float, loss_test:float, acc_train:float, acc_test:float) -> None:
         """Show training info during the training process."""
 
         if epoch % 100 == 0:
@@ -289,7 +306,7 @@ class NN:
                 print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f} [Acc_Train] {(acc_train * 100):.1f}% [Acc_Val] {(acc_test * 100):.1f}% [TIME] {time}\033[?25h")
 
 
-    def show_record(self, epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation): #return a boolean to determine if training continue
+    def show_record(self, epoch:int, inputs_train:array, inputs_test:array, truths_train:array, truths_test:array, startTime:datetime, animation: str) -> bool: #return a boolean to determine if training continue
         """Show and record the loss."""
 
         if epoch % 50 == 0:
@@ -342,7 +359,7 @@ class NN:
             plt.close()
 
 
-    def prepare(self, visualize, threshold):
+    def prepare(self, visualize:bool, threshold:float) -> None:
         """Create folder to save training result."""
 
         if visualize == True:

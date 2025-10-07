@@ -51,17 +51,13 @@ def mlp_getdata(source: str, conf: dict) -> tuple:
     return inputs, truths
 
 
-def mlp_splitdata(config_file, file, ratio:float=0.8) -> None:
+def mlp_splitdata(conf:dict, file:str, ratio:float=0.8) -> None:
     """Split dataset into 2 parts, training data and test / validation data."""
 
-    print(config_file)
-    conf = conf_parser(config_file)
     df = load(file, conf["index"])
     if df is None:
         sys.exit(1)
-
     seed = conf["seed"]
-
     df_shuffled = df.sample(frac=1, random_state=seed).reset_index(drop=True)
     l = len(df_shuffled)
     train_data = df_shuffled[:int(ratio * l)]
@@ -74,7 +70,7 @@ def mlp_splitdata(config_file, file, ratio:float=0.8) -> None:
     print("[Save splited data into (data/train.csv) (data/test.csv)]")
 
 
-def mlp_create_nn(argv):
+def mlp_create_nn(argv:list) -> tuple:
     """Initialize neural network instance."""
 
     conf = conf_parser(argv[2])
@@ -97,7 +93,8 @@ def main():
         if len(argv) == 1 or ((len(argv) == 2 and argv[1] == "--help")):
             print_help()
         elif argv[1] == "-s" and len(argv) == 4:
-            mlp_splitdata(argv[2], argv[3], 0.8)
+            conf = conf_parser(argv[2])
+            mlp_splitdata(conf, argv[3], conf["train_ratio"])
         elif len(argv) == 4 or len(argv) == 5:
             nn, inputs, truths, conf = mlp_create_nn(argv)
             if argv[1] == "-t":

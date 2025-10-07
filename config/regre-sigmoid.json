@@ -4,7 +4,7 @@
     "weights_init": ["xavier", "xavier", "xavier"],
     "loss": "MeanSquareError",
     "max_epoch": 20000,
-    "seed": 132,
+    "seed": 13142,
     "learning_rate": 0.1,
     "batch_size": 100,
     "classification": false,
