@@ -7,11 +7,16 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import json
-import sys
 
 
 class NN:
     """Neural network class, which can perform training and prediction for both classification and regression tasks."""
+
+    deriv_map = {
+            relu: relu_deriv,
+            sigmoid: sigmoid_deriv,
+            leaky_relu: leaky_relu_deriv
+        }
 
     def __init__(self, shape: list, activation_functions: list, init_methods:list, classification:bool=False, loss:str="MeanSquareError"):
         """Init a multilayer perceptron."""
@@ -43,11 +48,6 @@ class NN:
         self.loss_train = None
         self.plt = plt
 
-        self.deriv_map = {
-            relu: relu_deriv,
-            sigmoid: sigmoid_deriv,
-            leaky_relu: leaky_relu_deriv
-        }
         self.classification = classification
 
 
@@ -56,6 +56,10 @@ class NN:
 
         if len(inputs) != len(truths):
             raise ValueError("Mismatched training dataset")
+        if self.net_shape[-1] != 1 and self.loss_func == "BinaryCrossEntropy":
+            raise ValueError("BinaryCrossEntropy only adapt 1 dimension for training output.")
+        if self.activ_funcs[-1] == "softmax" and self.loss_func != "CategoricalCrossEntropy":
+            raise ValueError("Softmax only adapte to CategoricalCrossEntropy loss.")
 
 
     def train_batch(self, inputs:array, truths:array, learning_rate:float=0.01) -> None:
@@ -75,16 +79,18 @@ class NN:
         # -----------------------------forward end-----------------------------
         # -----------------------------back probab --------------------------------
         # Last layer
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] in [sigmoid, softmax]:
+        if self.loss_func == "CategoricalCrossEntropy" and self.activ_funcs[-1] == softmax:
+            local_grad = actives[-1] - truths_batch
+        elif self.loss_func == "BinaryCrossEntropy" and self.activ_funcs[-1] == sigmoid:
             local_grad = actives[-1] - truths_batch
         else:
-            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], self.deriv_map) # last layer difference
+            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], NN.deriv_map) # last layer difference
         Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
         Wgrads.append(local_grad @ actives[-2].T / len(inputs))
     
         for i in range(self.len_nets - 1, 0, -1):
             grad_prev_layer = self.nets[i].T @ local_grad  #cal the loss of prev layer
-            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], self.deriv_map) 
+            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], NN.deriv_map) 
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------
@@ -120,11 +126,12 @@ class NN:
         self.prepare(visualize, threshold)
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
 
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+        if self.loss_func == "CategoricalCrossEntropy" and self.activ_funcs[-1] == softmax:
             truths_test = self.convert_to_onehot(truths_test)
             truths_train = self.convert_to_onehot(truths_train)
         startTime = datetime.now()
         try:
+            self.show_record(0, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
             for epoch in range(max_iter):
                 inputs_train, truths_train = shuffle_data(inputs_train, truths_train)
                 # mini_batch_training
@@ -135,7 +142,7 @@ class NN:
                     self.train_batch(inputs_batch, truths_batch, learning_rate)
                     count += batch_size
                 # mini_batch_training
-                stop = self.show_record(epoch, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
+                stop = self.show_record(epoch + 1, inputs_train, inputs_test, truths_train, truths_test, startTime, animation)
                 if stop == True:
                     break
             print("[TRAINING DONE]")
@@ -187,35 +194,53 @@ class NN:
         print("[Params saved => (params.json)]\033[?25h")
 
 
+    def test_classification(self, test_truths:array, test_result:array):
+        count = 0
+        l = len(test_result)
+        if self.loss_func == "CategoricalCrossEntropy":
+            loss_test = loss(ce_loss, self.convert_to_onehot(test_truths), test_result) 
+            test_result = np.argmax(test_result, axis=1, keepdims=True)
+            for i in range(len(test_result)):
+                count += cmp_correct(test_result[i], test_truths[i], i)
+        elif self.loss_func == "BinaryCrossEntropy":
+            if test_result.shape[1] == 1:
+                loss_test = loss(bce_loss, test_truths, test_result)
+                test_result = (test_result > 0.5).astype(int)
+                for i in range(len(test_result)):
+                    count += cmp_correct(test_result[i], test_truths[i], i)
+            elif test_result.shape[1] == 2:
+                test_truths_onehot = self.convert_to_onehot(test_truths)
+                loss_test = loss(bce_loss, test_truths_onehot, test_result)
+                test_result_1d = np.argmax(test_result, axis=1, keepdims=True)
+                for i in range(len(test_result)):
+                    print(f"IDX {i}  TRUTH {test_truths_onehot[i]} => PRED [{test_result[i][0]:.3f} {test_result[i][1]:.3f}]", end="")
+                    if test_result_1d[i] == test_truths[i]:
+                        print("  \033[32mOK\033[0m")
+                        count += 1
+                    else:
+                        print("  \033[31mKO\033[0m")
+                test_result = test_result_1d
+            else:
+                raise ValueError("Binary Cross Entropy doesn't support more dimensions.")
+    
+        print(f"[Correct_Predict] [{count}/{l}]  [Acc_Test] {(count / l) * 100:.2f}%  [{self.loss_func}] {loss_test:.4f}")
+        return test_result
+
+
     def test(self, test_inputs: array, test_truths: array) -> None:
         """Test for a dataset, if is classification task, the program will check last layer activation function
         to determine if CCE or BCE is applied, and convert onehot encoding to actual category if softmax is provided."""
 
         test_result = self.inference(test_inputs)
-        plt.scatter(test_inputs[:, 0], np.array(test_truths)[:, 0], c="blue", label="Test truth", s=0.5)
-        plt.scatter(test_inputs[:, 0], np.array(test_result)[:, 0], c="red", label="Test prediction", s=0.5)
-        plt.legend(loc="lower left")
-        plt.savefig("visualize/prediction.png", dpi=300, bbox_inches='tight')
-        plt.close()
+
         if self.classification == True:
-            if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
-                loss_test = loss(ce_loss, self.convert_to_onehot(test_truths), test_result) 
-                test_result = np.argmax(test_result, axis=1, keepdims=True)
-            elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
-                print(test_truths.shape, test_result.shape)
-                loss_test = loss(ce_loss, test_truths, test_result)
-                test_result = [ (arr > 0.5).astype(int) for arr in test_result ]
-            count = 0
-            l = len(test_result)
-            for i in range(len(test_result)):
-                if test_result[i] == test_truths[i]:
-                    count += 1
-            print(f"[Correct_Predict] [{count}/{len(test_truths)}]  [Acc_Test] {(count / l) * 100:.2f}%  [Loss] {loss_test:.4f}")
+            test_result = self.test_classification(test_truths, test_result)
+        elif self.loss_func == "MeanSquareError":
+            print(test_truths.shape, test_result.shape)
+            loss_test = loss(mse_loss, test_truths, test_result) 
+            print(f"[Loss] {loss_test:.4f}")
         else:
-            if self.loss_func == "MeanSquareError":
-                print(test_truths.shape, test_result.shape)
-                loss_test = loss(mse_loss, test_truths, test_result) 
-                print(f"[Loss] {loss_test:.4f}")
+            raise ValueError("Unsupported loss function")
         with open("predictions.json", "w", encoding="utf-8") as f:
             json.dump({"prediction": [r.tolist() for r in test_result]}, f, indent=4)
         print("[Predictions saved => (predictions.json)]\033[?25h")
@@ -252,32 +277,36 @@ class NN:
     def cal_loss(self, truths_train:array, predicts_train:array, truths_test:array, predicts_test:array) -> tuple:
         "Use raw value to calculate loss, no need to convert to category."
 
-        if self.loss_func == "CrossEntropy":
-            loss_train = loss(ce_loss, truths_train, predicts_train)
-            loss_test = loss(ce_loss, truths_test, predicts_test)
+        loss_func = None
+        if self.loss_func == "CategoricalCrossEntropy":
+            loss_func = ce_loss
+        elif self.loss_func == "BinaryCrossEntropy":
+            loss_func = bce_loss
         elif self.loss_func == "MeanSquareError":    
-            loss_train = loss(mse_loss, truths_train, predicts_train)
-            loss_test = loss(mse_loss, truths_test, predicts_test)
+            loss_func = mse_loss
         else:
             raise ValueError("Not supported loss function")
+        
+        loss_train = loss(loss_func, truths_train, predicts_train)
+        loss_test = loss(loss_func, truths_test, predicts_test)
         return loss_train, loss_test
 
     
     def get_category_by_predict(self, predicts_train:array, predicts_test:array, truths_train:array, truths_test:array) -> tuple:
         """Get category by the output prediction of neural network."""
 
-        if self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == softmax:
+        if self.loss_func == "CategoricalCrossEntropy" and self.activ_funcs[-1] == softmax:
             predict_train_cat = predicts_train.argmax(axis=1, keepdims=True)
             predict_test_cat = predicts_test.argmax(axis=1, keepdims=True)
             truths_train_original = np.argmax(truths_train, axis=1, keepdims=True)
             truths_test_original = np.argmax(truths_test, axis=1, keepdims=True)
-        elif self.loss_func == "CrossEntropy" and self.activ_funcs[-1] == sigmoid:
+        elif self.loss_func == "BinaryCrossEntropy" and self.activ_funcs[-1] == sigmoid:
             predict_train_cat = (predicts_train >= 0.5).astype(np.int32)
             predict_test_cat = (predicts_test >= 0.5).astype(np.int32)
             truths_train_original = truths_train
             truths_test_original = truths_test
         else:
-            return None, None
+            raise ValueError("Not supported combination of loss and activation functions.")
 
         acc_train = accuracy_1d(truths_train_original, predict_train_cat)
         acc_test = accuracy_1d(truths_test_original, predict_test_cat)
@@ -298,7 +327,7 @@ class NN:
     def show_train_info(self, epoch:int, startTime:datetime, loss_train:float, loss_test:float, acc_train:float, acc_test:float) -> None:
         """Show training info during the training process."""
 
-        if epoch % 100 == 0:
+        if epoch % 10 == 0:
             time = str(datetime.now() - startTime).split(".")[0]
             if self.classification == False:
                 print(f"\033[?25l[EPOCH] {epoch}  [Loss_Train] {loss_train:.4f} [Loss_Val] {loss_test:.4f}  [TIME] {time}\033[?25h")
@@ -309,7 +338,7 @@ class NN:
     def show_record(self, epoch:int, inputs_train:array, inputs_test:array, truths_train:array, truths_test:array, startTime:datetime, animation: str) -> bool: #return a boolean to determine if training continue
         """Show and record the loss."""
 
-        if epoch % 50 == 0:
+        if epoch % 1 == 0:
             predicts_train = self.inference(inputs_train)
             predicts_test = self.inference(inputs_test)
     
@@ -326,7 +355,7 @@ class NN:
 
             # Early stop --------------------------------------
             if self.loss_train  is not None and self.loss_test is not None:
-                if abs(self.loss_train - loss_train) < self.loss_threshold and abs(self.loss_test - loss_test) < self.loss_threshold:
+                if abs(self.loss_train - loss_train) < self.loss_threshold:
                     return True
             # Early stop --------------------------------------
             self.loss_train = loss_train
@@ -357,6 +386,16 @@ class NN:
             plt.legend(loc="lower right")
             plt.savefig("visualize/accuracy.png", dpi=300, bbox_inches='tight')
             plt.close()
+
+
+    def show_test_img(self, test_inputs:array, shape:tuple, index: int) -> None:
+        """If test data is image, show them"""
+
+        print(f"Show test image {index} with shape {shape}")
+        img = test_inputs[index].reshape(shape)
+        plt.imshow(img, cmap="gray")
+        plt.show()
+        plt.close()
 
 
     def prepare(self, visualize:bool, threshold:float) -> None:

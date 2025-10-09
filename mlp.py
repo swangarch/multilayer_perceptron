@@ -59,6 +59,7 @@ def mlp_splitdata(conf:dict, file:str, ratio:float=0.8) -> None:
         sys.exit(1)
     seed = conf["seed"]
     df_shuffled = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
     l = len(df_shuffled)
     train_data = df_shuffled[:int(ratio * l)]
     test_data = df_shuffled[int(ratio * l):]
@@ -94,6 +95,8 @@ def main():
             print_help()
         elif argv[1] == "-s" and len(argv) == 4:
             conf = conf_parser(argv[2])
+            if conf is None:
+                sys.exit(1)
             mlp_splitdata(conf, argv[3], conf["train_ratio"])
         elif len(argv) == 4 or len(argv) == 5:
             nn, inputs, truths, conf = mlp_create_nn(argv)
@@ -101,6 +104,7 @@ def main():
                 mlp_train(nn, conf, inputs, truths)
             elif argv[1] == "-p":
                 nn.test(inputs, truths)
+                # nn.show_test_img(inputs, (28, 28), 8329)
             else:
                 raise ValueError("Wrong arguments. Try: python mlp.py --help")
         else:
@@ -109,9 +113,11 @@ def main():
     except KeyboardInterrupt as e:
         print()
         print("Stopped by user.\033[?25h")
+        sys.exit(1)
 
     except Exception as e:
         print("Error:", e)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

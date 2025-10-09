@@ -16,27 +16,22 @@ def convert_to_float(type_name:str):
         return type_name
 
 
-def preprocess_data(df):
+def preprocess_data(df: pd.DataFrame):
     """Preprocess data set to prepare inputs and label truths."""
 
     df.iloc[:, 0] = df.iloc[:, 0].apply(convert_to_float)
     data = np.array(df).astype(np.float32)
-
     # truths and inputs
     truths = data[:, 0]           # (N,)
     inputs = data[:, 1:]          # (N,M)
-
     # nomalize col
     X_min = inputs.min(axis=0)
     X_max = inputs.max(axis=0)
     inputs_norm = (inputs - X_min) / (X_max - X_min + 1e-8)
-
     truths = truths[:, np.newaxis]     # (N,V)
     inputs = inputs_norm[:, :]          # (N,M)
-
     print("[INPUTS]", inputs.shape)   # (N,M)
     print("[TRUTHS]", truths.shape)   # (N,V)
-    
     return inputs, truths
 
 

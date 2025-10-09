@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import json
+import sys
 
 
 def wrong_type(conf:dict, field: str, field_type: type, mandatory:bool) -> bool:
@@ -10,7 +11,6 @@ def wrong_type(conf:dict, field: str, field_type: type, mandatory:bool) -> bool:
         raise ValueError("Missing mandatory field.")
     if field in conf and isinstance(conf[field], field_type):
         return False
-    print(f"{field} {type(conf[field])}")
     return True
 
 
@@ -64,9 +64,9 @@ def valid_net_struct(conf: dict) -> bool:
     for act in activ_funcs:
         if act not in ["relu", "sigmoid", "leaky_relu", "softmax", "none"]:
             raise ValueError("Wrong activation funcion")
-    if loss not in ["CrossEntropy", "MeanSquareError"]:
+    if loss not in ["CategoricalCrossEntropy", "MeanSquareError", "BinaryCrossEntropy"]:
         raise ValueError("Wrong loss function")
-    if loss == "CrossEntropy" and activ_funcs[-1] not in  ["sigmoid", "softmax"]:
+    if (loss == "CategoricalCrossEntropy" or loss == "BinaryCrossEntropy") and activ_funcs[-1] not in  ["sigmoid", "softmax"]:
         raise ValueError("CrossEntropy loss only accept sigmoid or softmax as last layer activation function")
     
     for init_method in init:
@@ -127,11 +127,11 @@ def conf_parser(config: str):
         return None
 
 
-# def main():
-#     conf = conf_parser(sys.argv[1])
-#     if conf is None:
-#         sys.exit(1)
+def main():
+    conf = conf_parser(sys.argv[1])
+    if conf is None:
+        sys.exit(1)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

@@ -9,15 +9,51 @@ Multilayer perceptron (MLP) is a simple neural network (NN), can solve both regr
 These projects is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
 without high-level ML libraries.
 
-A `venv.sh` and `requirements.txt` to help you set up a virtual environment and install the necessary packages:
+A `Makefile` `venv.sh` and `requirements.txt` to help you set up a virtual environment and install the necessary packages:
 
 ```bash
 git clone https://github.com/swangarch/multilayer_perceptron
 cd multilayer_perceptron
 
-bash venv.sh
+# To setup virtual environment
+make setup
+
+# To enter virtual environment
 source venv/bin/activate
 ```
+
+## Usage
+
+### For example dataset classification
+
+```bash
+# To split the dataset
+make split
+
+# To train with training configuration file and training dataset
+make train
+
+# To test with test dataset
+make test
+```
+
+### For 0-9 handwrite digits dataset classification
+
+```bash
+# To split, train and test the dataset
+make digit
+```
+
+### For random generated 1d data regression
+
+```bash
+# To split, train and test the dataset, with relu activation
+make regre-relu
+
+# To split, train and test the dataset, with sigmoid activation
+make regre-sigmoid
+```
+
 
 ## Features
 
@@ -25,9 +61,9 @@ source venv/bin/activate
 
 - **Visualization** → includes real-time animations to track the learning process.
 
-- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc.
+- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc througn a configuration file.
 
-- Data handling → built-in data loading and preprocessing.
+- Data handling → data loading and preprocessing.
 
 - Support multiple activation functions: **ReLU, Sigmoid, Softmax, Leaky ReLU**
 
@@ -82,7 +118,8 @@ $$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y$$
 $$\frac{\partial L}{\partial z} = \hat{y} - y$$
 
 
-This mathematical convenience makes backpropagation efficient for both regression and classification tasks.
+
+If you're interested in the details, this [**article**](https://shivammehta25.github.io/posts/deriving-categorical-cross-entropy-and-softmax/) by Shivam Mehta explains in depth how this simplification was derived. This mathematical convenience makes backpropagation efficient for both regression and classification tasks.
 
 
 
@@ -116,9 +153,10 @@ With multiple layers and non-linear activations, the network learns complex boun
 
 ## Programs 
 
+In addition to the provided Makefile, the following section explains the usage in detail and describes how you can customize the training process to fit your specific needs.
+
 ### Configuration
 
-We recommand you to use --help option before the first usage.
 
 An json config file to pass network structure and training configuration is required.
 
@@ -133,7 +171,7 @@ An json config file to pass network structure and training configuration is requ
           "weights_init": ["he", "he", "xavier"],  
           // Layer weights initialization methods, e.g. he / xavier / zero
 
-          "loss": "CrossEntropy",  
+          "loss": "CategoricalCrossEntropy",  
           // Loss function, supporting MeanSquareError and CrossEntropy
 
           "max_epoch": 1000,  
@@ -142,8 +180,8 @@ An json config file to pass network structure and training configuration is requ
           "learning_rate": 0.01,  
           // Learning rate for gradient descent
 
-          "batch_size": 500,  
-          // Batch size for mini-batch training， 0 for SGD
+          "batch_size": 50,  
+          // Batch size for mini-batch training， 1 for SGD
 
           "classification": true,  
           // Whether to calculate accuracy (true for classification tasks)
@@ -162,7 +200,7 @@ An json config file to pass network structure and training configuration is requ
       }
 ```
 ### Train and predict
-
+We recommand you to use --help option before the first usage.
 ```
       Usage:
 
@@ -229,20 +267,20 @@ The objective is to classify whether a tumor is malignant or benign based on the
 ```bash
 python mlp.py -t config/data-softmax.json data/train.csv (params.json)
 ```
-Not if params.json is provided, the program will perform fine tuning.
+After training, the params.json will be saved, which contain weights, biases and network structure.
+If params.json is provided, the program will perform fine tuning.
 
 ### To test
 ```bash
 python mlp.py -p config/data-softmax.json data/test.csv params.json
 ```
 
-This dataset support both BCE and CCE, if data-sigmoid.json is used, it will perform BCE otherwise if data-softmax.json is used, it will perform CCE.
+The program support both BCE and CCE, if sigmoid is used in the last layer, it will perform BCE otherwise if softmax is used, it will perform CCE.
 
 The program will make prediction, an accuracy will be calculated and prediction will be saved in predictions.json.
 
 ### Other datasets and configurations provided
-- 0-1.csv _____ 0-1.json => 0 to 1 hand wirte digits recognition with BCE loss
-- 0-9.csv _____ 0-9.json => 0 to 9 hand wirte digits recognition with CCE loss
+- 0-9.csv _____ 0-9.json => 0 to 9 hand wirte digits recognition with softmax and CCE loss
 - --gen-data1d _____ regre-relu.json => 1d random generated data with RELU activation and MSE loss
 - --gen-data1d _____ regre-sigmoid.json => 1d random generated data with Sigmoid activation and MSE loss
 

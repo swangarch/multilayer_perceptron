@@ -69,17 +69,25 @@ def loss(func, truth, predict):
 
 
 def mse_loss(truth: array, predict: array):
-    """Calculate mse loss."""
+    """Calculate mean square error loss."""
 
     return 0.5 * np.mean((truth - predict) ** 2)
 
 
 def ce_loss(truth: array, predict: array):
-    """Calculate cross entropy loss."""
+    """Calculate categorical cross entropy loss."""
 
     eps = 1e-12
     predict = np.clip(predict, eps, 1 - eps)
     return -np.mean(np.sum(truth * np.log(predict), axis=1))
+
+
+def bce_loss(truth: array, predict: array):
+    """Calculate binary cross entropy loss."""
+
+    eps = 1e-12
+    predict = np.clip(predict, eps, 1 - eps)
+    return -np.mean(truth * np.log(predict) + (1 - truth) * np.log(1 - predict))
 
 
 def accuracy_1d(truth: array, predict: array):
@@ -114,6 +122,17 @@ def split_dataset(inputs, truths, ratio=0.8):
 
     return inputs_train, truths_train, inputs_test, truths_test
 
+
+def cmp_correct(result:array, truth:array, i:int) -> int:
+    """Compare the literal result of prediction with truth."""
+
+    print(f"IDX {i}  TRUTH {truth} => PRED {result}", end="")
+    if result == truth:
+        print("  \033[32mOK\033[0m")
+        return 1
+    else:
+        print("  \033[31mKO\033[0m")
+        return 0
 
 
 
