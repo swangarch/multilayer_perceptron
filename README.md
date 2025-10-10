@@ -22,6 +22,7 @@ make setup
 source venv/bin/activate
 ```
 
+
 ## Usage
 
 ### For example dataset classification
@@ -37,12 +38,18 @@ make train
 make test
 ```
 
-### For 0-9 handwrite digits dataset classification
+Breast cancer diagnosis, a binary classification based on 30 features of a cell.
+
+### MNIST handwrite digits classification (0–9)
 
 ```bash
 # To split, train and test the dataset
 make digit
 ```
+
+For the handwritten digit classification task (0–9), the model achieved 97.19% test accuracy using 33,000 training samples of 28 × 28 images in the optimal configuration.
+
+For the handwritten character recognition task with 94 categories, the model reached 91% accuracy based on 175,000 of 28 × 28 images training samples.
 
 ### For random generated 1d data regression
 
@@ -54,14 +61,13 @@ make regre-relu
 make regre-sigmoid
 ```
 
-
 ## Features
 
 - Training methods → supports **Stochastic Gradient Descent (SGD)** and **mini-batch training**.
 
 - **Visualization** → includes real-time animations to track the learning process.
 
-- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc througn a configuration file.
+- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc through a configuration file.
 
 - Data handling → data loading and preprocessing.
 
