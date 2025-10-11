@@ -6,7 +6,7 @@ Multilayer perceptron (MLP) is a simple neural network (NN), can solve both regr
 
 ## Requirements
 
-These projects is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
+The project is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
 without high-level ML libraries.
 
 A `Makefile` `venv.sh` and `requirements.txt` to help you set up a virtual environment and install the necessary packages:
@@ -38,7 +38,7 @@ make train
 make test
 ```
 
-Breast cancer diagnosis, a binary classification based on 30 features of a cell.
+Breast cancer diagnosis dataset, a binary classification based on 30 features of a cell.
 
 ### MNIST handwrite digits classification (0–9)
 
@@ -67,7 +67,7 @@ make regre-sigmoid
 
 - **Visualization** → includes real-time animations to track the learning process.
 
-- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc through a configuration file.
+- **Configurable** architecture → adjustable network shape, activation functions, initialization methods, max iterations, learning rate, batch size, etc via a configuration file.
 
 - Data handling → data loading and preprocessing.
 
@@ -84,7 +84,7 @@ make regre-sigmoid
 
 ![Demo](visualization/diagram/mlp.jpg)
 
-A **Multilayer Perceptron** is a basic type of artificial neural network that learns to map input data to the correct output by adjusting internal parameters called weights and biases. It is composed of multiple layers of artificial neurons, where each neuron performs a simple computation — combining inputs, applying weights, adding a bias, and passing the result through an activation function to introduce non-linearity. Then using back propagation and gradient descent to find ideal weights and biases.
+A **Multilayer Perceptron** is a basic artificial neural network that learns to map input data to the correct output by adjusting internal parameters called weights and biases. It is composed of multiple layers of artificial neurons, where each neuron performs a simple computation — combining inputs, multiplying weights, adding a bias, and passing the result through an activation function to introduce non-linearity. Then using back propagation and gradient descent to find ideal weights and biases.
 
 ### Learning Process
 The learning process consists of three main stages:
@@ -111,7 +111,7 @@ The final layer produces the output — either a value (for regression) or class
 ### Back probagation
 ![Demo](visualization/diagram/back_probagation.jpg)
 
-In backpropagation, the model calculates how far its predictions are from the correct answers using a loss function (like MSE or Cross-Entropy). Then, it computes the gradient of this loss to each weight and bias using the chain rule. This process tells the model which direction each weight and bias should move to reduce the overall error.
+In backpropagation, the model calculates how far its predictions are from the correct answers using a loss function (like MSE or Cross-Entropy). Then, it computes the gradient of this loss to each weight and bias using the **chain rule**. This process tells the model which direction each weight and bias should move to reduce the overall error.
 
 For the output layer, the gradient simplification is elegant:
 
@@ -119,7 +119,7 @@ For the output layer, the gradient simplification is elegant:
 
 $$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y$$
 
-**Cross-Entropy Classification**: The output layer uses Softmax (multi-class) or Sigmoid (binary) activation. Remarkably, when combined with cross-entropy loss, the gradient simplifies to the same form:
+**Cross-Entropy Classification**: The output layer uses Softmax (multi-class) or Sigmoid (binary) activation. Remarkably, when combined with Cross-Entropy loss, the gradient simplifies to the same form:
 
 $$\frac{\partial L}{\partial z} = \hat{y} - y$$
 
@@ -264,21 +264,21 @@ The remaining 30 numerical features describe various characteristics of a cell n
 It is split into two parts: one for training and validation one for testing.
 
 ```bash
-python mlp.py -s config/data-softmax.json data/data.csv
+python mlp.py -s config/data.json data/data.csv
 ```
 
 The objective is to classify whether a tumor is malignant or benign based on the given features.
 
 ### To train
 ```bash
-python mlp.py -t config/data-softmax.json data/train.csv (params.json)
+python mlp.py -t config/data.json data/train.csv (params.json)
 ```
 After training, the params.json will be saved, which contain weights, biases and network structure.
 If params.json is provided, the program will perform fine tuning.
 
 ### To test
 ```bash
-python mlp.py -p config/data-softmax.json data/test.csv params.json
+python mlp.py -p config/data.json data/test.csv params.json
 ```
 
 The program support both BCE and CCE, if sigmoid is used in the last layer, it will perform BCE otherwise if softmax is used, it will perform CCE.
