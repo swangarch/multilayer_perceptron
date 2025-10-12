@@ -332,6 +332,44 @@ if __name__ == "__main__":
 The figure shows that multilayer perceptron is capable of learning non-linear patterns from different datasets and can generalize beyond the training data, making them applicable to a wide range of tasks.
 
 ![Regression demo](visualization/nn/prediction.jpg)
+---
+
+### Hyperparameter Tuning: Batch Size
+
+**Batch size** is a key hyperparameter that influences both training speed and model performance. To study its effect, I kept all other parameters constant and varied only the batch size. In this experiment, I used **CuPy** to replace **NumPy** in order to leverage GPU acceleration and improve computational efficiency during training.
+
+```json
+{
+    "shape": [784, 392, 128, 64, 32, 10],
+    "activation_funcs": ["relu", "relu", "relu", "relu", "softmax"],
+    "weights_init": ["he", "he", "he", "he", "xavier"],
+    "loss": "CategoricalCrossEntropy"
+}
+```
+
+| Batch Size | Time (s) | Accuracy | Loss |
+|:-----------:|:--------:|:--------:|:-----:|
+| 1           | 2040     | 0.9814   | 0.1580 |
+| 10          | 180      | 0.9769   | 0.1197 |
+| 50          | 45       | 0.9719   | 0.1371 |
+| 100         | 31       | 0.9676   | 0.1153 |
+| 200         | 25       | 0.9593   | 0.1362 |
+| 500         | 22       | 0.9414   | 0.1937 |
+| 1000        | 21       | 0.9414   | 0.1937 |
+
+#### Analysis
+
+- **Training Time**: As batch size increases, training time decreases dramatically, reflecting better computational efficiency.
+
+- **Accuracy**: Accuracy drops noticeably when batch size exceeds 200, indicating that very large batches may reduce generalization capability.
+The drop in accuracy for large batches can sometimes be reduced by slightly increasing the learning rate.
+
+- **Loss**: Smaller batches tend to achieve lower loss values, suggesting better fine-grained learning at the cost of longer training time.
+
+#### Conclusion
+
+In this experiment, batch sizes between 50 and 100 provide the best balance between training efficiency and model performance.
+Smaller batches has higher accuracy but are slower, while larger batches are faster but may sacrifice precision.
 
 ---
 
