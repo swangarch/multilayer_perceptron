@@ -336,7 +336,7 @@ The figure shows that multilayer perceptron is capable of learning non-linear pa
 
 ### Hyperparameter Tuning: Batch Size
 
-**Batch size** is a key hyperparameter that influences both training speed and model performance. To study its effect, I kept all other parameters constant and varied only the batch size. In this experiment, I used **CuPy** to replace **NumPy** in order to leverage GPU acceleration and improve computational efficiency during training.
+**Batch size** is a key hyperparameter that influences both training speed and model performance. To study its effect, I kept all other parameters constant and varied only the batch size, trained the model on the MNIST dataset. In this experiment, I used **CuPy** to replace **NumPy** in order to leverage GPU acceleration and improve computational efficiency during training.
 
 ```json
 {
