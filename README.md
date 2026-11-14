@@ -9,21 +9,31 @@ Multilayer perceptron (MLP) is a simple neural network (NN), can solve both regr
 The project is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
 without high-level ML libraries.
 
-A `Makefile` `venv.sh` and `requirements.txt` to help you set up a virtual environment and install the necessary packages:
+Use Python **3.12** and **uv** to manage the environment and dependencies.
+Install uv before continuing. Run the following commands from the project root:
 
 ```bash
 git clone https://github.com/swangarch/multilayer_perceptron
 cd multilayer_perceptron
 
-# To setup virtual environment
-make setup
+# Create .venv and install the locked dependencies and the project
+uv sync --locked
 
-# To enter virtual environment
-source venv/bin/activate
+# Alternatively, use the Makefile (runs uv sync)
+make setup
 ```
+
+Commands below use `uv run`, so activating the virtual environment is not required.
+To activate it manually on macOS/Linux, use `source .venv/bin/activate`.
 
 
 ## Usage
+
+Run these commands from the project root. Makefile targets use `uv run -m mlp`.
+
+```bash
+uv run -m mlp --help
+```
 
 ### For example dataset classification
 
@@ -54,12 +64,44 @@ For the handwritten character recognition task with 94 categories, the model rea
 ### For random generated 1d data regression
 
 ```bash
-# To split, train and test the dataset, with relu activation
+# To train and test generated data, with relu activation
 make regre-relu
 
-# To split, train and test the dataset, with sigmoid activation
+# To train and test generated data, with sigmoid activation
 make regre-sigmoid
 ```
+
+## Packaging
+
+Build the wheel and source distribution with uv:
+
+```bash
+uv build
+
+# Alternatively
+make build
+```
+
+The output files are written to `dist/`:
+
+- `mlp-0.1.0-py3-none-any.whl`
+- `mlp-0.1.0.tar.gz`
+
+To install the wheel into a Python 3.12 virtual environment:
+
+```bash
+uv venv --python 3.12
+uv pip install dist/mlp-0.1.0-py3-none-any.whl
+
+# macOS/Linux: run the installed package
+.venv/bin/python -m mlp --help
+```
+
+The wheel contains the Python package. Example configurations and datasets in the
+repository's `config/` and `data/` directories must be distributed separately.
+Pass their paths when running the installed package. The split command writes to
+`data/train.csv` and `data/test.csv`, so the working directory must contain a
+`data/` directory.
 
 ## Features
 
@@ -210,7 +252,7 @@ We recommand you to use --help option before the first usage.
 ```
       Usage:
 
-        python  mlp.py  <--options> <config.json> <data.csv> [params.json]
+        uv run -m mlp <option> <config.json> <data.csv> [params.json]
 
       Options:
 
@@ -264,24 +306,32 @@ The remaining 30 numerical features describe various characteristics of a cell n
 It is split into two parts: one for training and validation one for testing.
 
 ```bash
-python mlp.py -s config/data.json data/data.csv
+uv run -m mlp -s config/data.json data/data.csv
 ```
 
 The objective is to classify whether a tumor is malignant or benign based on the given features.
 
 ### To train
 ```bash
-python mlp.py -t config/data.json data/train.csv (params.json)
+# Train a new model
+uv run -m mlp -t config/data.json data/train.csv
+
+# Fine-tune an existing model
+uv run -m mlp -t config/data.json data/train.csv params.json
 ```
 After training, the params.json will be saved, which contain weights, biases and network structure.
 If params.json is provided, the program will perform fine tuning.
 
 ### To test
 ```bash
-python mlp.py -p config/data.json data/test.csv params.json
+uv run -m mlp -p config/data.json data/test.csv params.json
 ```
 
-The program support both BCE and CCE, if sigmoid is used in the last layer, it will perform BCE otherwise if softmax is used, it will perform CCE.
+The loss function is selected explicitly by the `loss` field in the configuration.
+Use `BinaryCrossEntropy` with a sigmoid output for binary classification,
+`CategoricalCrossEntropy` with a softmax output for multi-class classification,
+or `MeanSquareError` with a linear output (`"none"`) for regression.
+The output activation alone does not select the loss function.
 
 The program will make prediction, an accuracy will be calculated and prediction will be saved in predictions.json.
 
@@ -292,11 +342,11 @@ The program will make prediction, an accuracy will be calculated and prediction 
 
 ### Class 
 
-Below is a simple example of using the `NN` class to train a regression model.
+Below is a simple example of using the `MultiLayerPerceptron` class to train a regression model.
 
 ```python
-from Neural_network import NN, get_activation_funcs_by_name
-from Data_process import load, preprocess_data, conf_parser, generate_data_rand
+from mlp.neural_network import MultiLayerPerceptron, relu
+from mlp.data_process import generate_data_rand
 
 def main():
     try:
@@ -306,7 +356,7 @@ def main():
         weights_init = ("he", "he", "he")  # Define the weights initialization methods
 
         # Initialize neural network
-        nn = NN(net_shape, activation_funcs, weights_init)
+        nn = MultiLayerPerceptron(net_shape, activation_funcs, weights_init)
 
         # Generate training data
         inputs, truths = generate_data_rand(142, 500, 0.02)

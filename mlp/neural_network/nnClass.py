@@ -9,7 +9,7 @@ import os
 import json
 
 
-class NN:
+class MultiLayerPerceptron:
     """Neural network class, which can perform training and prediction for both classification and regression tasks."""
 
     deriv_map = {
@@ -84,13 +84,13 @@ class NN:
         elif self.loss_func == "BinaryCrossEntropy" and self.activ_funcs[-1] == sigmoid:
             local_grad = actives[-1] - truths_batch
         else:
-            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], NN.deriv_map) # last layer difference
+            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], MultiLayerPerceptron.deriv_map) # last layer difference
         Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
         Wgrads.append(local_grad @ actives[-2].T / len(inputs))
     
         for i in range(self.len_nets - 1, 0, -1):
             grad_prev_layer = self.nets[i].T @ local_grad  #cal the loss of prev layer
-            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], NN.deriv_map) 
+            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], MultiLayerPerceptron.deriv_map) 
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------

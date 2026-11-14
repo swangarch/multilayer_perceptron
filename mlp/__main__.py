@@ -2,8 +2,8 @@
 
 from numpy import ndarray as array
 import numpy as np
-from neural_network import NN,  get_activation_funcs_by_name
-from data_process import load, preprocess_data, conf_parser, generate_data_rand
+from mlp.neural_network import MultiLayerPerceptron, get_activation_funcs_by_name
+from mlp.data_process import load, preprocess_data, conf_parser, generate_data_rand
 import sys
 
 
@@ -13,7 +13,7 @@ def print_help() -> None:
     print("-----------------------------------------------------------------------------------------------------------------")
     print("Multilayer perceptron")
     print("Usage:")
-    print("   python  mlp.py  <--options> <config.json> <data.csv> [params.json]")
+    print("   uv run -m mlp <option> <config.json> <data.csv> [params.json]")
     print("Options:")
     print("  -s:  Split dataset into (train.csv) and (test.csv), no params required")
     print("  -t:  Train dataset, if params.json is provided, it performs fine tuning.")
@@ -25,7 +25,7 @@ def print_help() -> None:
     print("-----------------------------------------------------------------------------------------------------------------")
 
 
-def mlp_train(nn: NN, conf: dict, inputs: array, truths: array) -> None:
+def mlp_train(nn: MultiLayerPerceptron, conf: dict, inputs: array, truths: array) -> None:
     """Train a model with traing data and configuration."""
 
     nn.train(inputs, truths, 
@@ -78,7 +78,7 @@ def mlp_create_nn(argv:list) -> tuple:
     if conf is None:
         sys.exit(1)
     np.random.seed(conf["seed"])
-    nn = NN(conf["shape"], get_activation_funcs_by_name(conf["activation_funcs"]), 
+    nn = MultiLayerPerceptron(conf["shape"], get_activation_funcs_by_name(conf["activation_funcs"]), 
             conf["weights_init"],
             classification=conf["classification"],
             loss=conf["loss"])
@@ -106,9 +106,9 @@ def main():
                 nn.test(inputs, truths)
                 # nn.show_test_img(inputs, (28, 28), 8329)
             else:
-                raise ValueError("Wrong arguments. Try: python mlp.py --help")
+                raise ValueError("Wrong arguments. Try: uv run -m mlp --help")
         else:
-            raise ValueError("Wrong arguments. Try: python mlp.py --help")
+            raise ValueError("Wrong arguments. Try: uv run -m mlp --help")
 
     except KeyboardInterrupt as e:
         print()

@@ -1,25 +1,37 @@
 setup:
 	@echo "Setup virtual enviroment"
-	@bash venv.sh
+	uv sync
+
+build:
+	uv build
+
+clean:
+	rm -rf ./dist \
+			./.venv
+
+fclean: clean
+	rm -rf params.json predictions.json visualize
+	
+	find . -type d -name '__pycache__' -prune -exec rm -rf {} +
 
 split:
-	python mlp.py -s config/data.json data/data.csv
+	uv run -m mlp -s config/data.json data/data.csv
 
 train:
-	python mlp.py -t config/data.json data/train.csv
+	uv run -m mlp -t config/data.json data/train.csv
 
 test:
-	python mlp.py -p config/data.json data/test.csv params.json
+	uv run -m mlp -p config/data.json data/test.csv params.json
 
 digit:
-	python mlp.py -s config/0-9.json data/0-9.csv
-	python mlp.py -t config/0-9.json data/train.csv
-	python mlp.py -p config/0-9.json data/test.csv params.json
+	uv run -m mlp -s config/0-9.json data/0-9.csv
+	uv run -m mlp -t config/0-9.json data/train.csv
+	uv run -m mlp -p config/0-9.json data/test.csv params.json
 
 regre-relu:
-	python mlp.py -t config/regre-relu.json --gen-data1d
-	python mlp.py -p config/regre-relu.json --gen-data1d params.json
+	uv run -m mlp -t config/regre-relu.json --gen-data1d
+	uv run -m mlp -p config/regre-relu.json --gen-data1d params.json
 
 regre-sigmoid:
-	python mlp.py -t config/regre-sigmoid.json --gen-data1d
-	python mlp.py -p config/regre-sigmoid.json --gen-data1d params.json
+	uv run -m mlp -t config/regre-sigmoid.json --gen-data1d
+	uv run -m mlp -p config/regre-sigmoid.json --gen-data1d params.json

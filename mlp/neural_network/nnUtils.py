@@ -133,6 +133,3 @@ def cmp_correct(result:array, truth:array, i:int) -> int:
     else:
         print("  \033[31mKO\033[0m")
         return 0
-
-
-
