@@ -84,14 +84,14 @@ make build
 
 The output files are written to `dist/`:
 
-- `mlp-0.1.0-py3-none-any.whl`
-- `mlp-0.1.0.tar.gz`
+- `sw_mlp-1.0.0-py3-none-any.whl`
+- `sw_mlp-1.0.0.tar.gz`
 
 To install the wheel into a Python 3.12 virtual environment:
 
 ```bash
 uv venv --python 3.12
-uv pip install dist/mlp-0.1.0-py3-none-any.whl
+uv pip install dist/sw_mlp-1.0.0-py3-none-any.whl
 
 # macOS/Linux: run the installed package
 .venv/bin/python -m mlp --help
