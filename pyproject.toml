@@ -1,6 +1,6 @@
 [project]
 name = "sw-mlp"
-version = "1.0.3"
+version = "1.0.4"
 description = "A multilayer perceptron implemented with Numpy."
 readme = "mlp/README.md"
 requires-python = ">=3.12,<3.13"
