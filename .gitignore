@@ -4,6 +4,8 @@ visualize
 
 venv
 
+.venv
+
 params.json
 
 predictions.json
@@ -11,3 +13,11 @@ predictions.json
 test.csv
 
 train.csv
+
+dist
+
+.DS_Store
+
+.env
+
+.env.*

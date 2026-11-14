@@ -27,6 +27,3 @@ def generate_data_rand(seed, number, noise_scale=0.2):
     inputs = np.array(inputs)
     truths = np.array(truths)
     return inputs, truths
-
-
-    

@@ -9,7 +9,7 @@ import os
 import json
 
 
-class NN:
+class MultiLayerPerceptron:
     """Neural network class, which can perform training and prediction for both classification and regression tasks."""
 
     deriv_map = {
@@ -47,6 +47,7 @@ class NN:
         self.loss_test = None
         self.loss_train = None
         self.plt = plt
+        self.visualize = True
 
         self.classification = classification
 
@@ -84,13 +85,13 @@ class NN:
         elif self.loss_func == "BinaryCrossEntropy" and self.activ_funcs[-1] == sigmoid:
             local_grad = actives[-1] - truths_batch
         else:
-            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], NN.deriv_map) # last layer difference
+            local_grad = (actives[-1] - truths_batch) * activ_deriv(self.activ_funcs[-1], actives[-1], MultiLayerPerceptron.deriv_map) # last layer difference
         Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
         Wgrads.append(local_grad @ actives[-2].T / len(inputs))
     
         for i in range(self.len_nets - 1, 0, -1):
             grad_prev_layer = self.nets[i].T @ local_grad  #cal the loss of prev layer
-            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], NN.deriv_map) 
+            local_grad = grad_prev_layer * activ_deriv(self.activ_funcs[i - 1], actives[i], MultiLayerPerceptron.deriv_map) 
             Bgrads.append(np.mean(local_grad, axis=1, keepdims=True))
             Wgrads.append(local_grad @ actives[i - 1].T / len(inputs))
         # -----------------------------back probab end-----------------------------
@@ -119,10 +120,12 @@ class NN:
         return array
 
 
-    def train(self, inputs: array, truths:array, max_iter:int=10000, learning_rate:float=0.01, batch_size:int=50, visualize:bool=True, test_ratio:float = 0.8, threshold:str|float=None, animation:str=None):
+    def train(self, inputs: array, truths:array, max_iter:int=10000, learning_rate:float=0.01, batch_size:int=50, visualize:bool=True, test_ratio:float = 0.8, threshold:str|float=None, animation:str|None=None):
         """Train a dataset, it will first chunk dataset into mini-batches, if batch_size is 1, it will perfom SGD."""
 
         self.check_train_params(inputs, truths)
+        if animation not in (None, "none", "plot", "scatter"):
+            raise ValueError("animation must be None, 'none', 'plot', or 'scatter'")
         self.prepare(visualize, threshold)
         inputs_train, truths_train, inputs_test, truths_test = split_dataset(inputs, truths, test_ratio)
 
@@ -146,13 +149,18 @@ class NN:
                 if stop == True:
                     break
             print("[TRAINING DONE]")
-            self.plt.ioff()
-            self.plt.show()
-            self.plt.close()
+            if visualize and animation in ("plot", "scatter"):
+                self.test_animation(inputs_test[:50], truths_test[:50], animation)
+                self.plt.savefig("visualize/train.png")
+                self.plt.show()
+            if visualize:
+                self.plt.ioff()
+            # self.plt.close()
         except KeyboardInterrupt:
             print("Stopped by user.\033[?25h")
         self.save_weights()
-        self.plt.close()
+        if visualize:
+            self.plt.close()
 
 
     def load_weights(self, file: str) -> None:
@@ -271,7 +279,6 @@ class NN:
             raise TypeError("Wrong animation type")
         self.plt.legend(loc="lower left")
         self.plt.pause(0.1)
-        self.plt.clf()
 
 
     def cal_loss(self, truths_train:array, predicts_train:array, truths_test:array, predicts_test:array) -> tuple:
@@ -349,7 +356,7 @@ class NN:
                 acc_train, acc_test = self.get_category_by_predict(predicts_train, predicts_test, truths_train, truths_test)
 
             self.collect_train_record(epoch, loss_train, loss_test, acc_train, acc_test)
-            if animation != "none" and epoch % 50 == 0:
+            if self.visualize and animation in ("plot", "scatter") and epoch % 50 == 0:
                 self.test_animation(inputs_test[:50], truths_test[:50], animation)
             self.show_train_info(epoch, startTime, loss_train, loss_test, acc_train, acc_test)
 
@@ -366,6 +373,7 @@ class NN:
     def save_plots(self):
         """Show loss func plots and if classification is applied show also accuracy."""
 
+        os.makedirs("visualize", exist_ok=True)
         plt.plot(self.graph_epoch, self.graph_loss_train, c="cyan", lw=1, label="Training loss")
         plt.plot(self.graph_epoch, self.graph_loss_test, c="orange", linestyle="--", lw=1, label="Test loss")
         plt.grid(True, linestyle="--", linewidth=0.7, alpha=0.7)
@@ -401,6 +409,7 @@ class NN:
     def prepare(self, visualize:bool, threshold:float) -> None:
         """Create folder to save training result."""
 
+        self.visualize = visualize
         if visualize == True:
             os.makedirs("visualize", exist_ok=True)
             plt.ion()
