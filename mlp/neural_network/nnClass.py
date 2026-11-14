@@ -146,9 +146,10 @@ class MultiLayerPerceptron:
                 if stop == True:
                     break
             print("[TRAINING DONE]")
-            self.plt.ioff()
             self.plt.show()
-            self.plt.close()
+            self.plt.savefig("visualize/train.png")
+            self.plt.ioff()
+            # self.plt.close()
         except KeyboardInterrupt:
             print("Stopped by user.\033[?25h")
         self.save_weights()
@@ -271,7 +272,6 @@ class MultiLayerPerceptron:
             raise TypeError("Wrong animation type")
         self.plt.legend(loc="lower left")
         self.plt.pause(0.1)
-        self.plt.clf()
 
 
     def cal_loss(self, truths_train:array, predicts_train:array, truths_test:array, predicts_test:array) -> tuple:

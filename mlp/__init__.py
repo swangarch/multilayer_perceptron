@@ -7,4 +7,7 @@ from .data_process.config_parser import conf_parser
 from .data_process.data_generation import *
 
 
-__all__ = ["MultiLayerPerceptron", relu, leaky_relu, sigmoid, split_dataset, get_activation_funcs_by_name, load, preprocess_data, conf_parser, generate_data_rand]
+__all__ = ["MultiLayerPerceptron", relu, leaky_relu, sigmoid,
+           split_dataset,
+           get_activation_funcs_by_name, load, preprocess_data,
+           conf_parser, generate_data_rand]
