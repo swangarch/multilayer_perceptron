@@ -1,8 +1,8 @@
 [project]
 name = "sw-mlp"
-version = "1.0.0"
+version = "1.0.2"
 description = "A multilayer perceptron implemented with Numpy."
-readme = "README.md"
+readme = "mlp/README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "matplotlib>=3.11.2",
@@ -19,3 +19,4 @@ build-backend="uv_build"
 [tool.uv.build-backend]
 module-root = ""
 module-name = "mlp"
+

@@ -4,6 +4,26 @@ Multilayer perceptron (MLP) is a simple neural network (NN), can solve both regr
 
 [[Demo Video]](https://www.youtube.com/watch?v=YRcl1f--tcw)
 
+## Install from PyPI
+
+The published package requires Python **3.12**:
+
+```bash
+pip install sw-mlp
+```
+
+Import it in your Python code:
+
+```python
+import mlp
+
+# Access the neural network class and built-in data generator
+model_class = mlp.MultiLayerPerceptron
+inputs, truths = mlp.generate_data_rand(seed=142, number=500, noise_scale=0.02)
+```
+
+See the [package README](mlp/README.md) for a complete training and visualization example.
+
 ## Requirements
 
 The project is built from scratch with Python, with only Numpy, Pandas, Matplotlib,
