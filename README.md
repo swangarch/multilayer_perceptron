@@ -11,17 +11,6 @@ The published package requires Python **3.12**:
 ```bash
 pip install sw-mlp
 ```
-
-Import it in your Python code:
-
-```python
-import mlp
-
-# Access the neural network class and built-in data generator
-model_class = mlp.MultiLayerPerceptron
-inputs, truths = mlp.generate_data_rand(seed=142, number=500, noise_scale=0.02)
-```
-
 See the [package README](mlp/README.md) for a complete training and visualization example.
 
 ## Requirements
@@ -36,10 +25,6 @@ Install uv before continuing. Run the following commands from the project root:
 git clone https://github.com/swangarch/multilayer_perceptron
 cd multilayer_perceptron
 
-# Create .venv and install the locked dependencies and the project
-uv sync --locked
-
-# Alternatively, use the Makefile (runs uv sync)
 make setup
 ```
 
@@ -96,25 +81,7 @@ make regre-sigmoid
 Build the wheel and source distribution with uv:
 
 ```bash
-uv build
-
-# Alternatively
 make build
-```
-
-The output files are written to `dist/`:
-
-- `sw_mlp-1.0.0-py3-none-any.whl`
-- `sw_mlp-1.0.0.tar.gz`
-
-To install the wheel into a Python 3.12 virtual environment:
-
-```bash
-uv venv --python 3.12
-uv pip install dist/sw_mlp-1.0.0-py3-none-any.whl
-
-# macOS/Linux: run the installed package
-.venv/bin/python -m mlp --help
 ```
 
 The wheel contains the Python package. Example configurations and datasets in the
